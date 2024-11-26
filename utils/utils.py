@@ -76,8 +76,8 @@ def get_colormap(config):
             raise ValueError(f'Unsupport colormap type: {config.colormap}.')
 
         colormap_json = {k: list(v) for k, v in colormap.items()}
-            with open(f'{config.save_dir}/colormap.json', 'w') as f:
-                json.dump(colormap_json, f, indent=1)
+        with open(f'{config.save_dir}/colormap.json', 'w') as f:
+            json.dump(colormap_json, f, indent=1)
 
     colormap = [color for color in colormap.values()]
 
