@@ -1,5 +1,4 @@
 import os
-import cv2
 import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
@@ -61,6 +60,7 @@ class PolypDataset(Dataset):
             image = np.asarray(Image.open(self.images[index]).convert('RGB'))
         except:
             # Use Opencv to load a tif image if PIL fails to load it
+            import cv2
             image = cv2.imread(self.images[index])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = np.asarray(Image.open(self.masks[index]).convert('1')).astype(int)
