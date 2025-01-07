@@ -167,16 +167,16 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 
 ## Hyperparameter Optimization
 
-| Model      | Dataset			 | Dice(paper) | Dice(random) <br> val/test | Dice(Optuna) <br> val/test | 
-| ---------- |:-----------------:|:-----------:|:--------------------------:|:--------------------------:|
-| UNet-32	 | Kvasir			 | 0.8655	   | 0.9107/0.9444				| 0.9235/0.9483				 |
-| 			 | CVC-ClinicDB		 | 0.7631	   | 0.9537/0.9424				| 0.9679/0.9601				 |
-| 			 | CVC-ColonDB		 | 0.8032	   | 0.9125/0.8966				| 0.9601/0.9529				 |
-| 			 | ETIS-LaribpolypDB | 0.7984	   | 0.8294/0.8218				| 0.9653/0.9411				 |
-| smp-UNet	 | Kvasir			 | n.a.		   | 0.9341/0.9543				| 0.9368/0.9624				 |
-| 			 | CVC-ClinicDB		 | n.a.		   | 0.9737/0.9566				| 0.9769/0.9727				 |
-| 			 | CVC-ColonDB		 | n.a.		   | 0.9676/0.9658				| 0.9758/0.9634				 |
-| 			 | ETIS-LaribpolypDB | n.a.		   | 0.9740/0.9706				| 0.9796/0.9700				 |
+| Model      | Dataset			 | Dice(paper) | Dice(random) <br> val/test | Dice(Optuna) <br> val/test								| 
+| ---------- |:-----------------:|:-----------:|:--------------------------:|:---------------------------------------------------------:|
+| UNet-32	 | Kvasir			 | 0.8655	   | 0.9107/0.9444				| [0.9235/0.9483](optuna_results/unet-32_kvasir.json)		|
+| 			 | CVC-ClinicDB		 | 0.7631	   | 0.9537/0.9424				| [0.9679/0.9601](optuna_results/unet-32_clinicdb.json)		|
+| 			 | CVC-ColonDB		 | 0.8032	   | 0.9125/0.8966				| [0.9601/0.9529](optuna_results/unet-32_colondb.json)		|
+| 			 | ETIS-LaribpolypDB | 0.7984	   | 0.8294/0.8218				| [0.9653/0.9411](optuna_results/unet-32_etis.json)			|
+| smp-UNet	 | Kvasir			 | n.a.		   | 0.9341/0.9543				| [0.9368/0.9624](optuna_results/smp-unet_kvasir.json)		|
+| 			 | CVC-ClinicDB		 | n.a.		   | 0.9737/0.9566				| [0.9769/0.9727](optuna_results/smp-unet_clinicdb.json)	|
+| 			 | CVC-ColonDB		 | n.a.		   | 0.9676/0.9658				| [0.9758/0.9634](optuna_results/smp-unet_colondb.json)		|
+| 			 | ETIS-LaribpolypDB | n.a.		   | 0.9740/0.9706				| [0.9796/0.9700](optuna_results/smp-unet_etis.json)		|
 
 [When using random search, the hyperparameters were chosen from the default config. For Optuna search, each experiment was performed 100 trials.]  
 
