@@ -3,6 +3,7 @@ import segmentation_models_pytorch as smp
 
 from .unet import UNet
 from .ducknet import DuckNet
+from .resunet import ResUNet
 
 
 decoder_hub = {'deeplabv3':smp.DeepLabV3, 'deeplabv3p':smp.DeepLabV3Plus, 'fpn':smp.FPN,
@@ -11,7 +12,7 @@ decoder_hub = {'deeplabv3':smp.DeepLabV3, 'deeplabv3p':smp.DeepLabV3Plus, 'fpn':
 
 
 def get_model(config):
-    model_hub = {'unet':UNet, 'ducknet':DuckNet}
+    model_hub = {'unet':UNet, 'ducknet':DuckNet, 'resunet':ResUNet}
 
     # The following models currently support auxiliary heads
     aux_models = []

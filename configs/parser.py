@@ -33,7 +33,7 @@ def get_parser():
 
     # Model
     parser.add_argument('--model', type=str, default=None, 
-        choices=['unet', 'ducknet', 'smp',],
+        choices=['unet', 'ducknet', 'resunet', 'smp',],
         help='choose which model you want to use')
     parser.add_argument('--encoder', type=str, default=None, 
         help='choose which encoder of SMP model you want to use (please refer to SMP repo)')

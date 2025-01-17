@@ -1,0 +1,19 @@
+{
+ "params": {
+  "loss": "ce",
+  "optimizer": "adam",
+  "base_lr": 0.02320121712055236,
+  "use_ema": false,
+  "scale_max": 0.3975404006640413,
+  "scale_min": 0.32468707412878905,
+  "brightness": 0.00656298471627974,
+  "contrast": 0.3608146841872729,
+  "saturation": 0.012422906073689621,
+  "h_flip": 0.027106748059028296,
+  "v_flip": 0.2658713454690283
+ },
+ "value": 0.8500078916549683,
+ "finished_trials": 100,
+ "pruned_trials": 91,
+ "completed_trials": 9
+}
