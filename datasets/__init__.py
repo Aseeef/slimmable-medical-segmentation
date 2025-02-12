@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
-from .polyp import PolypDataset
 
-dataset_hub = {'polyp':PolypDataset}
+from .polyp import Polyp
+from .dataset_registry import dataset_hub
 
 
 def get_dataset(config, mode):
@@ -58,3 +58,9 @@ def get_test_loader(config):
                                     shuffle=False, num_workers=config.num_workers)
 
     return test_loader
+
+
+def list_available_datasets():
+    dataset_list = list(dataset_hub.keys())
+
+    return dataset_list

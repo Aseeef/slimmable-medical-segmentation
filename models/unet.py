@@ -9,8 +9,10 @@ import torch
 import torch.nn as nn
 
 from .modules import conv1x1, ConvBNAct, DeConvBNAct
+from .model_registry import register_model
 
 
+@register_model()
 class UNet(nn.Module):
     def __init__(self, num_class=1, n_channel=3, base_channel=64, act_type='relu'):
         super().__init__()

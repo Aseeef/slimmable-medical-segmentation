@@ -29,9 +29,8 @@ def cal_model_params(config, imgw=1024, imgh=512):
 
 if __name__ == '__main__':
     config = MyConfig()
-
-    config.init_dependent_config()
-
     config = load_parser(config)
+
+    config.use_aux = False
 
     cal_model_params(config)

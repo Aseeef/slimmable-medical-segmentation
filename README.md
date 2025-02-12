@@ -5,7 +5,7 @@ PyTorch implementation of medical segmentation models, support multi-gpu trainin
 # Requirements
 
 torch == 1.8.1  
-segmentation-models-pytorch  
+segmentation-models-pytorch (optional)  
 torchmetrics  
 albumentations  
 loguru  

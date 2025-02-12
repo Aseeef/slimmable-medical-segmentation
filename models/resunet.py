@@ -10,8 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .modules import conv1x1, ConvBNAct
+from .model_registry import register_model
 
 
+@register_model()
 class ResUNet(nn.Module):
     def __init__(self, num_class, n_channel=3, base_channel=64, act_type='relu'):
         super().__init__()

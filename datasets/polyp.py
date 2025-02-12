@@ -4,9 +4,11 @@ from PIL import Image
 from torch.utils.data import Dataset
 import albumentations as AT
 from albumentations.pytorch import ToTensorV2
+from .dataset_registry import register_dataset
 
 
-class PolypDataset(Dataset):
+@register_dataset
+class Polyp(Dataset):
     def __init__(self, config, mode='train'):
         assert mode in ['train', 'val', 'test']
         mode_folder = mode if mode in ['train', 'test'] else 'validation'

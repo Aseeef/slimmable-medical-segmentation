@@ -65,4 +65,6 @@ if __name__ == '__main__':
     config = MyConfig()
     config = load_parser(config)
 
+    config.use_aux = False
+
     test_model_speed(config)

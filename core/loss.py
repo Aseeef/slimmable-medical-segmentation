@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class OhemCELoss(nn.Module):
     def __init__(self, thresh, ignore_index=255):
-        super(OhemCELoss, self).__init__()
+        super().__init__()
         self.thresh = -torch.log(torch.tensor(thresh, requires_grad=False, dtype=torch.float)).cuda()
         self.ignore_index = ignore_index
         self.criteria = nn.CrossEntropyLoss(ignore_index=ignore_index, reduction='none')
