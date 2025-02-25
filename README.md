@@ -59,6 +59,14 @@ In order to obtain reproducible results, you may also download the train-val-tes
 
 </details>
 
+<details><summary>UNet++</summary>
+
+[UNet++: A Nested U-Net Architecture for Medical Image Segmentation](https://arxiv.org/abs/1807.10165) [[codes](models/unetpp.py)]  
+
+> Abstract: In this paper, we present UNet++, a new, more powerful architecture for medical image segmentation. Our architecture is essentially a deeply-supervised encoder-decoder network where the encoder and decoder sub-networks are connected through a series of nested, dense skip pathways. The re-designed skip pathways aim at reducing the semantic gap between the feature maps of the encoder and decoder sub-networks. We argue that the optimizer would deal with an easier learning task when the feature maps from the decoder and encoder networks are semantically similar. We have evaluated UNet++ in comparison with U-Net and wide U-Net architectures across multiple medical image segmentation tasks: nodule segmentation in the low-dose CT scans of chest, nuclei segmentation in the microscopy images, liver segmentation in abdominal CT scans, and polyp segmentation in colonoscopy videos. Our experiments demonstrate that UNet++ with deep supervision achieves an average IoU gain of 3.9 and 3.4 points over U-Net and wide U-Net, respectively.
+
+</details>
+
 <br>
 
 If you want to use encoder-decoder structure with pretrained encoders, you may refer to: segmentation-models-pytorch[^smp]. This repo also provides easy access to SMP. Just modify the [config file](configs/my_config.py) to (e.g. if you want to train UNet with ResNet-101 backbone as teacher model to perform knowledge distillation)  
@@ -119,6 +127,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-34			| None		  | 160.28	  | 0.9502					| 0.9051				  | 0.9230/0.9573					   | 0.8618/0.9198						|
 | ResUNet-32<sup>1</sup>| None		  | 2.06	  | n.a.					| n.a.					  | 0.8902/0.9113					   | 0.8107/0.8426						|
 | UNet-32<sup>2</sup>	| None		  | 8.63	  | 0.8655					| 0.7629				  | 0.9107/0.9444					   | 0.8421/0.8972						|
+| UNet++				| None		  | 8.53	  | n.a.					| n.a.					  | 0.9235/0.9551<sup>6</sup>		   | 0.8625/0.9157<sup>6</sup>			|
 | smp-UNet<sup>3</sup>  | None		  | 14.33	  | n.a.					| n.a.					  | 0.9267/0.9556					   | 0.8677/0.9166						|
 | smp-UNet				| ImageNet	  | 14.33	  | n.a.					| n.a.					  | 0.9341/0.9543					   | 0.8799/0.9144						|
 
@@ -127,6 +136,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 [<sup>3</sup>smp-UNet stands for smp model with decoder UNet. For simplicity, ResNet-18 is chosen as the decoder in my experiments.]  
 [<sup>4</sup>These results were obtained from DUCKNet's paper]  
 [<sup>5</sup>These results were obtained by training 400 epochs with crop-size 320x320]  
+[<sup>6</sup>These results were obtained by using auxiliary heads]  
 
 ## CVC-ClinicDB
 
@@ -136,6 +146,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-34 | None		  | 160.28	  | 0.9478		| 0.9009	  | 0.9674/0.9451		   | 0.9382/0.8995			|
 | ResUnet-32 | None		  | 2.06	  | n.a.		| n.a.		  | 0.9178/0.9021		   | 0.8554/0.8319			|
 | UNet-32	 | None		  | 8.63	  | 0.7631		| 0.6169	  | 0.9537/0.9424		   | 0.9140/0.8949			|
+| UNet++	 | None		  | 8.53	  | n.a.		| n.a.		  | 0.9581/0.9520		   | 0.9217/0.9112			|
 | smp-UNet	 | None		  | 14.33	  | n.a.		| n.a.		  | 0.9662/0.9503		   | 0.9361/0.9082			|
 | smp-UNet	 | ImageNet	  | 14.33	  | n.a.		| n.a.		  | 0.9737/0.9566		   | 0.9497/0.9190			|
 
@@ -147,6 +158,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-34 | None		  | 160.28	  | 0.9230		| 0.8571	  | 0.9390/0.9322		   | 0.8899/0.8790			|
 | ResUNet-32 | None		  | 2.06	  | n.a.		| n.a.		  | 0.7017/0.7551		   | 0.6112/0.6600			|
 | UNet-32	 | None		  | 8.63	  | 0.8032		| 0.7037	  | 0.9125/0.8966		   | 0.8486/0.8255			|
+| UNet++	 | None		  | 8.53	  | n.a.		| n.a.		  | 0.9296/0.9141		   | 0.8748/0.8510			|
 | smp-UNet	 | None		  | 14.33	  | n.a.		| n.a.		  | 0.9545/0.9498		   | 0.9157/0.9078			|
 | smp-UNet	 | ImageNet	  | 14.33	  | n.a.		| n.a.		  | 0.9676/0.9658		   | 0.9388/0.9356			|
 
@@ -158,6 +170,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-34 | None		  | 160.28	  | 0.9354		| 0.8788	  | 0.8805/0.8884		   | 0.8040/0.8142			|
 | ResUNet-32 | None		  | 2.06	  | n.a.		| n.a.		  | 0.6427/0.6524		   | 0.5710/0.5748			|
 | UNet-32	 | None		  | 8.63	  | 0.7984		| 0.6969	  | 0.8294/0.8218		   | 0.7403/0.7296			|
+| UNet++	 | None		  | 8.53	  | n.a.		| n.a.		  | 0.9188/0.8730		   | 0.8587/0.7929			|
 | smp-UNet	 | None		  | 14.33	  | n.a.		| n.a.		  | 0.9386/0.8997		   | 0.8896/0.8300			|
 | smp-UNet	 | ImageNet	  | 14.33	  | n.a.		| n.a.		  | 0.9740/0.9706		   | 0.9504/0.9442			|
 
@@ -190,6 +203,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | 			 | CVC-ClinicDB		 | 0.7631	   | 0.9537/0.9424				| [0.9679/0.9601](optuna_results/unet-32_clinicdb.json)		|
 | 			 | CVC-ColonDB		 | 0.8032	   | 0.9125/0.8966				| [0.9601/0.9529](optuna_results/unet-32_colondb.json)		|
 | 			 | ETIS-LaribpolypDB | 0.7984	   | 0.8294/0.8218				| [0.9653/0.9411](optuna_results/unet-32_etis.json)			|
+| UNet++	 | Kvasir			 | n.a.		   | 0.9235/0.9551				| [0.9302/0.9462](optuna_results/unetpp_kvasir.json)		|
+| 			 | CVC-ClinicDB		 | n.a.		   | 0.9581/0.9520				| [0.9733/0.9682](optuna_results/unetpp_clinicdb.json)		|
+| 			 | CVC-ColonDB		 | n.a.		   | 0.9296/0.9141				| [0.9621/0.9511](optuna_results/unetpp_colondb.json)		|
+| 			 | ETIS-LaribpolypDB | n.a.		   | 0.9188/0.8730				| [0.9687/0.9549](optuna_results/unetpp_etis.json)			|
 | smp-UNet	 | Kvasir			 | n.a.		   | 0.9341/0.9543				| [0.9368/0.9624](optuna_results/smp-unet_kvasir.json)		|
 | 			 | CVC-ClinicDB		 | n.a.		   | 0.9737/0.9566				| [0.9769/0.9727](optuna_results/smp-unet_clinicdb.json)	|
 | 			 | CVC-ColonDB		 | n.a.		   | 0.9676/0.9658				| [0.9758/0.9634](optuna_results/smp-unet_colondb.json)		|

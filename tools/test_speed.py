@@ -63,6 +63,7 @@ def test_model_speed(config, ratio=0.5, imgw=2048, imgh=1024, iterations=None):
 
 if __name__ == '__main__':
     config = MyConfig()
+    config.init_dependent_config()
     config = load_parser(config)
 
     config.use_aux = False
