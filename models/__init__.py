@@ -2,6 +2,7 @@ import os, torch
 
 from .ducknet import DuckNet
 from .resunet import ResUNet
+from .resunetpp import ResUNetPP
 from .unet import UNet
 from .unetpp import UNetPP
 from .model_registry import model_hub, aux_models

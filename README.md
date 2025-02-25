@@ -51,6 +51,14 @@ In order to obtain reproducible results, you may also download the train-val-tes
 
 </details>
 
+<details><summary>ResUNet++</summary>
+
+[ResUNet++: An Advanced Architecture for Medical Image Segmentation](https://arxiv.org/abs/1911.07067) [[codes](models/resunetpp.py)]  
+
+> Abstract: Accurate computer-aided polyp detection and segmentation during colonoscopy examinations can help endoscopists resect abnormal tissue and thereby decrease chances of polyps growing into cancer. Towards developing a fully automated model for pixel-wise polyp segmentation, we propose ResUNet++, which is an improved ResUNet architecture for colonoscopic image segmentation. Our experimental evaluations show that the suggested architecture produces good segmentation results on publicly available datasets. Furthermore, ResUNet++ significantly outperforms U-Net and ResUNet, two key state-of-the-art deep learning architectures, by achieving high evaluation scores with a dice coefficient of 81.33%, and a mean Intersection over Union (mIoU) of 79.27% for the Kvasir-SEG dataset and a dice coefficient of 79.55%, and a mIoU of 79.62% with CVC-612 dataset.
+
+</details>
+
 <details><summary>UNet</summary>
 
 [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597) [[codes](models/unet.py)]  
@@ -126,6 +134,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-17			| None		  | 40.1	  | 0.9343					| 0.8769				  | 0.9227/0.9515					   | 0.8612/0.9094						|
 | DUCKNet-34			| None		  | 160.28	  | 0.9502					| 0.9051				  | 0.9230/0.9573					   | 0.8618/0.9198						|
 | ResUNet-32<sup>1</sup>| None		  | 2.06	  | n.a.					| n.a.					  | 0.8902/0.9113					   | 0.8107/0.8426						|
+| ResUNet++				| None		  | 3.93	  | n.a.					| n.a.					  | 0.9238/0.9369					   | 0.8629/0.8843						|
 | UNet-32<sup>2</sup>	| None		  | 8.63	  | 0.8655					| 0.7629				  | 0.9107/0.9444					   | 0.8421/0.8972						|
 | UNet++				| None		  | 8.53	  | n.a.					| n.a.					  | 0.9235/0.9551<sup>6</sup>		   | 0.8625/0.9157<sup>6</sup>			|
 | smp-UNet<sup>3</sup>  | None		  | 14.33	  | n.a.					| n.a.					  | 0.9267/0.9556					   | 0.8677/0.9166						|
@@ -145,6 +154,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-17 | None		  | 40.1	  | 0.9450		| 0.8952	  | 0.9607/0.9434		   | 0.9262/0.8966			|
 | DUCKNet-34 | None		  | 160.28	  | 0.9478		| 0.9009	  | 0.9674/0.9451		   | 0.9382/0.8995			|
 | ResUnet-32 | None		  | 2.06	  | n.a.		| n.a.		  | 0.9178/0.9021		   | 0.8554/0.8319			|
+| ResUnet++	 | None		  | 3.93	  | n.a.		| n.a.		  | 0.9564/0.9424		   | 0.9187/0.8949			|
 | UNet-32	 | None		  | 8.63	  | 0.7631		| 0.6169	  | 0.9537/0.9424		   | 0.9140/0.8949			|
 | UNet++	 | None		  | 8.53	  | n.a.		| n.a.		  | 0.9581/0.9520		   | 0.9217/0.9112			|
 | smp-UNet	 | None		  | 14.33	  | n.a.		| n.a.		  | 0.9662/0.9503		   | 0.9361/0.9082			|
@@ -157,6 +167,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-17 | None		  | 40.1	  | 0.9353		| 0.8785	  | 0.9432/0.9357		   | 0.8968/0.8847			|
 | DUCKNet-34 | None		  | 160.28	  | 0.9230		| 0.8571	  | 0.9390/0.9322		   | 0.8899/0.8790			|
 | ResUNet-32 | None		  | 2.06	  | n.a.		| n.a.		  | 0.7017/0.7551		   | 0.6112/0.6600			|
+| ResUNet++	 | None		  | 3.93	  | n.a.		| n.a.		  | 0.9060/0.8979		   | 0.8390/0.8273			|
 | UNet-32	 | None		  | 8.63	  | 0.8032		| 0.7037	  | 0.9125/0.8966		   | 0.8486/0.8255			|
 | UNet++	 | None		  | 8.53	  | n.a.		| n.a.		  | 0.9296/0.9141		   | 0.8748/0.8510			|
 | smp-UNet	 | None		  | 14.33	  | n.a.		| n.a.		  | 0.9545/0.9498		   | 0.9157/0.9078			|
@@ -169,6 +180,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 | DUCKNet-17 | None		  | 40.1	  | 0.9324		| 0.8734	  | 0.8939/0.9013		   | 0.8223/0.8323			|
 | DUCKNet-34 | None		  | 160.28	  | 0.9354		| 0.8788	  | 0.8805/0.8884		   | 0.8040/0.8142			|
 | ResUNet-32 | None		  | 2.06	  | n.a.		| n.a.		  | 0.6427/0.6524		   | 0.5710/0.5748			|
+| ResUNet++	 | None		  | 3.93	  | n.a.		| n.a.		  | 0.8739/0.8352		   | 0.7952/0.7460			|
 | UNet-32	 | None		  | 8.63	  | 0.7984		| 0.6969	  | 0.8294/0.8218		   | 0.7403/0.7296			|
 | UNet++	 | None		  | 8.53	  | n.a.		| n.a.		  | 0.9188/0.8730		   | 0.8587/0.7929			|
 | smp-UNet	 | None		  | 14.33	  | n.a.		| n.a.		  | 0.9386/0.8997		   | 0.8896/0.8300			|
@@ -199,6 +211,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python main.py
 |			 | CVC-ClinicDB		 | n.a.		   | 0.9178/0.9021				| [0.9490/0.9383](optuna_results/resunet-32_clinicdb.json)	|
 |			 | CVC-ColonDB		 | n.a.		   | 0.7017/0.7551				| [0.9266/0.9263](optuna_results/resunet-32_colondb.json)	|
 |			 | ETIS-LaribpolypDB | n.a.		   | 0.6427/0.6524				| [0.8500/0.8725](optuna_results/resunet-32_etis.json)		|
+| ResUNet++	 | Kvasir			 | n.a.		   | 0.9238/0.9369				| [0.9248/0.9304](optuna_results/resunetpp-32_kvasir.json)	|
+|			 | CVC-ClinicDB		 | n.a.		   | 0.9564/0.9424				| [0.9683/0.9685](optuna_results/resunetpp-32_clinicdb.json)	|
+|			 | CVC-ColonDB		 | n.a.		   | 0.9060/0.8979				| [0.9487/0.9407](optuna_results/resunetpp-32_colondb.json)	|
+|			 | ETIS-LaribpolypDB | n.a.		   | 0.8739/0.8352				| [0.9231/0.8905](optuna_results/resunetpp-32_etis.json)		|
 | UNet-32	 | Kvasir			 | 0.8655	   | 0.9107/0.9444				| [0.9235/0.9483](optuna_results/unet-32_kvasir.json)		|
 | 			 | CVC-ClinicDB		 | 0.7631	   | 0.9537/0.9424				| [0.9679/0.9601](optuna_results/unet-32_clinicdb.json)		|
 | 			 | CVC-ColonDB		 | 0.8032	   | 0.9125/0.8966				| [0.9601/0.9529](optuna_results/unet-32_colondb.json)		|

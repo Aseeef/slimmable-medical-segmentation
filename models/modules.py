@@ -158,6 +158,60 @@ class PyramidPoolingModule(nn.Module):
         return x
 
 
+class ASPP(nn.Module):
+    def __init__(self, in_channels, out_channels, dilations=[1,6,12,18], act_type='relu'):
+        super().__init__()
+        assert isinstance(dilations, (list, tuple))
+        assert len(dilations) > 0
+        num_branch = len(dilations) + 1
+
+        hid_channels = out_channels // num_branch
+
+        self.pool = nn.Sequential(nn.AdaptiveAvgPool2d(1), ConvBNAct(in_channels, hid_channels, 1, act_type=act_type)) 
+        self.dilated_convs = nn.ModuleList([
+                                ConvBNAct(in_channels, hid_channels, 3, dilation=d, act_type=act_type) 
+                                for d in dilations
+                            ])
+
+        self.conv = ConvBNAct(hid_channels * num_branch, out_channels)
+
+    def forward(self, x):
+        size = x.size()[2:]
+        x_pool = self.pool(x)
+        x_pool = F.interpolate(x_pool, size, mode='bilinear', align_corners=True)
+
+        feats = [x_pool]
+        for dilated_conv in self.dilated_convs:
+            feat = dilated_conv(x)
+            feats.append(feat)
+
+        x = torch.cat(feats, dim=1)
+        x = self.conv(x)
+
+        return x
+
+
+class SEBlock(nn.Module):
+    def __init__(self, channels, act_type, reduction_num=16):
+        super().__init__()
+        squeeze_channels = channels // reduction_num
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.se_block = nn.Sequential(
+                            nn.Linear(channels, squeeze_channels),
+                            Activation(act_type),
+                            nn.Linear(squeeze_channels, channels),
+                            Activation('sigmoid')
+                        )
+
+    def forward(self, x):
+        residual = x
+        x = self.pool(x).squeeze(-1).squeeze(-1)
+        x = self.se_block(x).unsqueeze(-1).unsqueeze(-1)
+        x = x * residual
+
+        return x
+
+
 class SegHead(nn.Sequential):
     def __init__(self, in_channels, num_class, act_type, hid_channels=128):
         super().__init__(
