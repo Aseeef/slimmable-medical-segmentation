@@ -45,13 +45,16 @@ class Polyp(Dataset):
                 AT.HorizontalFlip(p=config.h_flip),
                 AT.VerticalFlip(p=config.v_flip),
                 AT.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+                AT.Affine(scale=(0.5,1.5), translate_percent=(-0.125,0.125), rotate=(-180,180), shear=(-22.5,22), always_apply=True),
                 ToTensorV2(),
             ])
 
         elif mode in ['val', 'test']:
             self.transform = AT.Compose([
+                AT.PadIfNeeded(min_height=config.crop_h, min_width=config.crop_w, value=(0, 0, 0), mask_value=(0, 0, 0)),
+                AT.CenterCrop(height=config.crop_h, width=config.crop_w),
                 AT.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-                ToTensorV2(),   
+                ToTensorV2(),
             ])
 
     def __len__(self):
