@@ -1,10 +1,4 @@
 name: dl_prj_env
-# conda create --name dl_prj_env python=3.11
-# pip install optuna torch torchvision torchaudio torchmetrics
-#pip install albumentations albumentations[imgaug]
-#pip install tqdm Pillow numpy segmentation-models-pytorch
-#pip install loguru
-#pip install tensorboard tensorboard-data-server opencv-python
 
 channels:
   - pytorch
@@ -30,3 +24,4 @@ dependencies:
       - tensorboard==2.19.0
       - tensorboard-data-server==0.7.2
       - opencv-python==4.11.0.86
+      - ptflops==0.74

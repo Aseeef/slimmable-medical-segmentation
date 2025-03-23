@@ -34,12 +34,14 @@ class MyConfig(BaseConfig):
 
         # Augmentation
         self.crop_size = 320
-        self.randscale = [-0.5, 1.0]
+        self.randscale = None
         self.brightness = [0.6, 1.6]
         self.contrast = 0.2
         self.saturation = 0.1
         self.h_flip = 0.5
         self.v_flip = 0.5
+        self.norm_mean = None
+        self.norm_std = None
         self.affine_shear = (-22.5, 22)
         self.affine_rotate = (-180, 180)
         self.affine_translate = (-0.125, 0.125)

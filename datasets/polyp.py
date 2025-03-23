@@ -36,26 +36,7 @@ class Polyp(Dataset):
                 self.images.append(img_path)
                 self.masks.append(msk_path)
 
-        if mode == 'train':
-            self.transform = AT.Compose([
-                AT.RandomScale(scale_limit=config.randscale),
-                AT.PadIfNeeded(min_height=config.crop_h, min_width=config.crop_w, value=(0, 0, 0), mask_value=(0, 0, 0)),
-                AT.RandomCrop(height=config.crop_h, width=config.crop_w),
-                AT.ColorJitter(brightness=config.brightness, contrast=config.contrast, saturation=config.saturation),
-                AT.HorizontalFlip(p=config.h_flip),
-                AT.VerticalFlip(p=config.v_flip),
-                AT.Normalize(mean=config.norm_mean, std=config.norm_std),
-                AT.Affine(scale=config.affine_scale, translate_percent=config.affine_translate, rotate=config.affine_rotate, shear=config.affine_shear, always_apply=True),
-                ToTensorV2(),
-            ])
-
-        elif mode in ['val', 'test']:
-            self.transform = AT.Compose([
-                AT.PadIfNeeded(min_height=config.crop_h, min_width=config.crop_w, value=(0, 0, 0), mask_value=(0, 0, 0)),
-                AT.CenterCrop(height=config.crop_h, width=config.crop_w),
-                AT.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-                ToTensorV2(),
-            ])
+        self.transform = self.get_transform(config, mode)
 
     def __len__(self):
         return len(self.images)
@@ -75,3 +56,68 @@ class Polyp(Dataset):
         image, mask = augmented['image'], augmented['mask']
 
         return image, mask
+
+    @staticmethod
+    def get_transform(config, mode):
+        """
+        Constructs a transformation pipeline dynamically based on config, model, and mode.
+
+        Args:
+            config: Configuration object containing augmentation settings.
+            mode: Dataset mode ('train', 'val', or 'test').
+
+        Returns:
+            Albumentations transformation pipeline.
+        """
+        transform_list = []
+
+        if mode == 'train':
+            # Apply augmentations only in training mode
+            if config.randscale not in [None, 0]:
+                transform_list.append(AT.RandomScale(scale_limit=config.randscale))
+
+            transform_list.append(AT.PadIfNeeded(
+                min_height=config.crop_h, min_width=config.crop_w,
+                fill=(0, 0, 0), fill_mask=(0, 0, 0)
+            ))
+
+            transform_list.append(AT.RandomCrop(height=config.crop_h, width=config.crop_w))
+
+            if any(x not in [None, 0] for x in [config.brightness, config.contrast, config.saturation]):
+                transform_list.append(AT.ColorJitter(
+                    brightness=config.brightness or 0,
+                    contrast=config.contrast or 0,
+                    saturation=config.saturation or 0
+                ))
+
+            if config.h_flip not in [None, 0]:
+                transform_list.append(AT.HorizontalFlip(p=config.h_flip))
+
+            if config.v_flip not in [None, 0]:
+                transform_list.append(AT.VerticalFlip(p=config.v_flip))
+
+            if any(x not in [None, 0] for x in
+                   [config.affine_scale, config.affine_translate, config.affine_rotate, config.affine_shear]):
+                transform_list.append(AT.Affine(
+                    scale=config.affine_scale if config.affine_scale is not None else 1.0,
+                    translate_percent=config.affine_translate if config.affine_translate is not None else 0,
+                    rotate=config.affine_rotate if config.affine_rotate is not None else 0,
+                    shear=config.affine_shear if config.affine_shear is not None else 0,
+                ))
+
+        elif mode in ['val', 'test']:
+            # Validation and test transformations (no augmentations)
+            transform_list.append(AT.PadIfNeeded(
+                min_height=config.crop_h, min_width=config.crop_w,
+                fill=(0, 0, 0), fill_mask=(0, 0, 0)
+            ))
+            transform_list.append(AT.CenterCrop(height=config.crop_h, width=config.crop_w))
+
+        # Apply normalization if mean and std are available
+        if config.norm_mean is not None and config.norm_std is not None:
+            transform_list.append(AT.Normalize(mean=config.norm_mean, std=config.norm_std))
+
+        # Convert to tensor (Always needed)
+        transform_list.append(ToTensorV2())
+
+        return AT.Compose(transform_list)

@@ -39,6 +39,11 @@ class DiceLoss(nn.Module):
         :param targets: Ground truth labels (batch_size, H, W).
         :return: Dice loss value.
         """
+        # Ensure targets are a PyTorch tensor and long type
+        if not isinstance(targets, torch.Tensor):
+            targets = torch.tensor(targets, dtype=torch.long, device=logits.device)
+        else:
+            targets = targets.to(dtype=torch.long)
 
         # Convert logits to probabilities using softmax
         probs = F.softmax(logits, dim=1)
