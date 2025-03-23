@@ -19,7 +19,7 @@ class DucknetConfig(BaseConfig):
 
         # Training
         self.total_epoch = 600
-        self.train_bs = 9  # this is PER GPU
+        self.train_bs = 12  # this is PER GPU
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4

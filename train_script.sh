@@ -6,8 +6,8 @@
 #$ -N ducknet_train
 #$ -j y
 #$ -o train.logs
-#$ -pe omp 2
-#$ -l gpus=3
+#$ -pe omp 4
+#$ -l gpus=2
 #$ -l gpu_c=8.0
 
 module load miniconda
