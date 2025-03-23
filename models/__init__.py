@@ -1,6 +1,7 @@
 import os, torch
 
 from .ducknet import DuckNet
+from .BRACSDuckNet import BRACSDuckNet
 from .resunet import ResUNet
 from .resunetpp import ResUNetPP
 from .unet import UNet

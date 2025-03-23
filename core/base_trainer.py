@@ -144,7 +144,29 @@ class BaseTrainer:
     def load_ckpt(self, config):
         if config.load_ckpt and os.path.isfile(config.load_ckpt_path):
             checkpoint = torch.load(config.load_ckpt_path, map_location=torch.device(self.device))
-            self.model.load_state_dict(checkpoint['state_dict'])
+            
+            '''
+            Loading checkpoints HERE. 
+            '''
+            #self.model.load_state_dict(checkpoint['state_dict'])
+            
+            ###################
+            # TODO: Find a better way to do this since right now this change would affect all models
+            state_dict = checkpoint["state_dict"]
+
+            # Remove any segmentation head keys that no longer match
+            filtered_state_dict = {
+                k: v for k, v in state_dict.items()
+                if not k.startswith("seg_head.") and not k.startswith("seg_head_bracs.")
+            }
+
+            missing, unexpected = self.model.load_state_dict(filtered_state_dict, strict=False)
+
+            print("[INFO] Loaded pretrained weights (excluding final segmentation head).")
+            print("[INFO] Missing keys:", missing)
+            print("[INFO] Unexpected keys:", unexpected)
+            ####################
+            
             if self.main_rank:
                 self.logger.info(f"Load model state dict from {config.load_ckpt_path}")
 
