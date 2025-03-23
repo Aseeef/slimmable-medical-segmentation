@@ -15,7 +15,6 @@ def get_dataset(config, mode):
 
 def get_loader(config, rank, mode, pin_memory=True, drop_last=True):
     dataset = get_dataset(config, mode)
-
     if mode == 'train':
         # Make sure train number is divisible by train batch size
         config.train_num = int(len(dataset) // config.train_bs * config.train_bs)

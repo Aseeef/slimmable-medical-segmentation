@@ -1,13 +1,16 @@
+import os.path
+
 from .base_config import BaseConfig
 
 
 class MyConfig(BaseConfig):
+
     def __init__(self,):
         super().__init__()
         # Dataset
         self.dataset = 'polyp'
         self.subset = 'kvasir'
-        self.data_root = r'/projectnb/ec523/projects/Team_A+/medical-segmentation-pytorch/PolypDataset/Kvasir-SEG'
+        self.data_root = os.path.join('PolypDataset', 'Kvasir-SEG')
         self.use_test_set = True
 
         # Model
@@ -32,8 +35,12 @@ class MyConfig(BaseConfig):
         # Augmentation
         self.crop_size = 320
         self.randscale = [-0.5, 1.0]
-        self.brightness = [0.6,1.6]
+        self.brightness = [0.6, 1.6]
         self.contrast = 0.2
         self.saturation = 0.1
         self.h_flip = 0.5
         self.v_flip = 0.5
+        self.affine_shear = (-22.5, 22)
+        self.affine_rotate = (-180, 180)
+        self.affine_translate = (-0.125, 0.125)
+        self.affine_scale = (0.5, 1.5)

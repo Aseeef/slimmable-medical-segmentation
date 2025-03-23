@@ -2,6 +2,7 @@ import os
 
 
 class BaseConfig:
+
     def __init__(self,):
         # Dataset
         self.dataset = None
@@ -86,6 +87,13 @@ class BaseConfig:
         self.saturation = 0.0
         self.h_flip = 0.0
         self.v_flip = 0.0
+        self.norm_mean = [0.485, 0.456, 0.406]
+        self.norm_std = [0.229, 0.224, 0.225]
+        self.affine_scale = None
+        self.affine_translate = None
+        self.affine_rotate = None
+        self.affine_shear = None
+
 
         # DDP
         self.synBN = True

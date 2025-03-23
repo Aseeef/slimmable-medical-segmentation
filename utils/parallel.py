@@ -24,7 +24,7 @@ def set_device(config, rank):
     else:   # DP
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         config.gpu_num = torch.cuda.device_count()
-        config.train_bs *= config.gpu_num
+        config.train_bs *= 1 if config.gpu_num == 0 else config.gpu_num
 
     # Setup num_workers
     config.num_workers = config.gpu_num * config.base_workers
