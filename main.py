@@ -1,12 +1,12 @@
 from core import SegTrainer
-from configs import MyConfig, load_parser
+from configs import DucknetConfig, load_parser
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 if __name__ == '__main__':
-    config = MyConfig()
+    config = DucknetConfig()
 
     config.init_dependent_config()
 

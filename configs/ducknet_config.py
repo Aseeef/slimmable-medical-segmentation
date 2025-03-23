@@ -3,14 +3,14 @@ import os.path
 from .base_config import BaseConfig
 
 
-class MyConfig(BaseConfig):
+class DucknetConfig(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Dataset
         self.dataset = 'polyp'
         self.subset = 'kvasir'
-        self.data_root = os.path.join('PolypDataset', 'Kvasir_SEG')
+        self.data_root = os.path.join('PolypDataset', 'Kvasir-SEG')
         self.use_test_set = True
 
         # Model
