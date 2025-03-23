@@ -10,7 +10,7 @@ class MyConfig(BaseConfig):
         # Dataset
         self.dataset = 'polyp'
         self.subset = 'kvasir'
-        self.data_root = os.path.join('PolypDataset', 'Kvasir-SEG')
+        self.data_root = os.path.join('PolypDataset', 'Kvasir_SEG')
         self.use_test_set = True
 
         # Model
