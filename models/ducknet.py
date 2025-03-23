@@ -15,7 +15,7 @@ from .model_registry import register_model
 
 @register_model()
 class DuckNet(nn.Module):
-    def __init__(self, num_class=1, n_channel=3, base_channel=17, act_type='relu'):
+    def __init__(self, num_class=1, n_channel=3, base_channel=34, act_type='relu'):
         super().__init__()
         self.down_stage1 = DownsampleBlock(n_channel, base_channel*2, act_type, fuse_channels=base_channel)
         self.down_stage2 = DownsampleBlock(base_channel*2, base_channel*4, act_type)

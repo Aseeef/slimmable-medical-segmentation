@@ -7,10 +7,10 @@
 #$ -j y
 #$ -o train.logs
 #$ -pe omp 2
-#$ -l gpus=2
-#$ -l gpu_type=V100
+#$ -l gpus=3
+#$ -l gpu_c=7.0
 
 module load miniconda
-conda activate my_env
+conda activate /projectnb/ec523/projects/Team_A+/dl_prj_env
 python3 ./main.py
 
