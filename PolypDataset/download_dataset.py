@@ -71,9 +71,6 @@ def download_file(url, output_path):
 
 def extract_zip(zip_path, extract_to):
     """Extract ZIP file if not already extracted."""
-    if os.path.exists(extract_to):
-        print(f"Skipping extraction, folder already exists: {extract_to}")
-        return
 
     print(f"Extracting: {zip_path} -> {extract_to}")
     os.makedirs(extract_to, exist_ok=True)
@@ -101,9 +98,8 @@ def main():
 
     datasets_to_download = DATASETS if args.dataset == "all" else {args.dataset: DATASETS[args.dataset]}
 
-    for name, url in datasets_to_download.items():
+    for _, url in datasets_to_download.items():
         zip_filename = url.split("/")[-1]
-        extract_folder = name  # Extract into a folder named after the dataset
 
         # Step 1: Download
         if not os.path.exists(zip_filename):
@@ -112,7 +108,7 @@ def main():
             print(f"File already exists, skipping download: {zip_filename}")
 
         # Step 2: Extract
-        extract_zip(zip_filename, extract_folder)
+        extract_zip(zip_filename, ".")
 
 
 if __name__ == "__main__":
