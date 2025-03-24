@@ -1,4 +1,5 @@
 from .ducknet_34_config import DuckNet34Config
+from .ducknet_32_config import DuckNet32Config
 from .ducknet_17_config import DuckNet17Config
 from .optuna_config import OptunaConfig
 
