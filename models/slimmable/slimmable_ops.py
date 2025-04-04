@@ -1,12 +1,17 @@
 """
 CREDIT: https://github.com/JiahuiYu/slimmable_networks/blob/master/models/slimmable_ops.py
+Modified Slimmable Neural Network Components
 """
+from typing import List, Optional
+
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 
 class SwitchableBatchNorm2d(nn.Module):
-    def __init__(self, width_mult_list, num_features_list):
+
+    def __init__(self, width_mult_list: List[float], num_features_list: List[int]):
         super(SwitchableBatchNorm2d, self).__init__()
         self.width_mult_list = width_mult_list
         self.num_features_list = num_features_list
@@ -18,16 +23,16 @@ class SwitchableBatchNorm2d(nn.Module):
         self.width_mult = max(width_mult_list)
         self.ignore_model_profiling = True
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
         idx = self.width_mult_list.index(self.width_mult)
-        y = self.bn[idx](input)
-        return y
+        return self.bn[idx](input)
 
 
 class SlimmableConv2d(nn.Conv2d):
-    def __init__(self, width_mult_list, in_channels_list, out_channels_list,
-                 kernel_size, stride=1, padding=0, dilation=1,
-                 groups_list=[1], bias=True):
+
+    def __init__(self, width_mult_list: List[float], in_channels_list: List[int], out_channels_list: List[int],
+                 kernel_size, stride: int | tuple[int, int] = 1, padding: int | tuple[int, int] = 0,
+                 dilation: int | tuple[int, int] = 1, groups_list: List[int] = [1], bias=True):
         super(SlimmableConv2d, self).__init__(
             max(in_channels_list), max(out_channels_list),
             kernel_size, stride=stride, padding=padding, dilation=dilation,
@@ -40,7 +45,7 @@ class SlimmableConv2d(nn.Conv2d):
             self.groups_list = [1 for _ in range(len(in_channels_list))]
         self.width_mult = max(width_mult_list)
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
         idx = self.width_mult_list.index(self.width_mult)
         self.in_channels = self.in_channels_list[idx]
         self.out_channels = self.out_channels_list[idx]
@@ -57,9 +62,11 @@ class SlimmableConv2d(nn.Conv2d):
 
 
 class SlimmableConvTranspose2d(nn.ConvTranspose2d):
-    def __init__(self, width_mult_list, in_channels_list, out_channels_list, kernel_size,
-                 stride=1, padding=0, output_padding=0, dilation=1,
-                 groups_list=[1], bias=True):
+
+    def __init__(self, width_mult_list: List[float], in_channels_list: List[int], out_channels_list: List[int],
+                 kernel_size: int | tuple[int, ...], stride: int | tuple[int, int] = 1,
+                 padding: int | tuple[int, int] = 0, output_padding: int | tuple[int, ...] = 0,
+                 dilation: int | tuple[int, int] = 1, groups_list: List[int] = [1], bias: bool = True):
         super(SlimmableConvTranspose2d, self).__init__(
             max(in_channels_list), max(out_channels_list), kernel_size,
             stride=stride, padding=padding, output_padding=output_padding,
@@ -75,7 +82,7 @@ class SlimmableConvTranspose2d(nn.ConvTranspose2d):
         # Store output_padding for use in the forward pass.
         self.output_padding = output_padding
 
-    def forward(self, input):
+    def forward(self, input: Tensor, output_size: Optional[List[int]] = None) -> Tensor:
         # Select the configuration based on the current width multiplier.
         idx = self.width_mult_list.index(self.width_mult)
         self.in_channels = self.in_channels_list[idx]
@@ -95,7 +102,9 @@ class SlimmableConvTranspose2d(nn.ConvTranspose2d):
 
 
 class SlimmableLinear(nn.Linear):
-    def __init__(self, width_mult_list, in_features_list, out_features_list, bias=True):
+
+    def __init__(self, width_mult_list: List[float], in_features_list: List[int],
+                 out_features_list: List[int], bias: bool = True):
         super(SlimmableLinear, self).__init__(
             max(in_features_list), max(out_features_list), bias=bias)
         self.width_mult_list = width_mult_list
@@ -103,7 +112,7 @@ class SlimmableLinear(nn.Linear):
         self.out_features_list = out_features_list
         self.width_mult = max(width_mult_list)
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
         idx = self.width_mult_list.index(self.width_mult)
         self.in_features = self.in_features_list[idx]
         self.out_features = self.out_features_list[idx]
@@ -115,13 +124,8 @@ class SlimmableLinear(nn.Linear):
         return nn.functional.linear(input, weight, bias)
 
 
-def make_divisible(v, divisor=8, min_value=1):
-    """
-    forked from slim:
-    https://github.com/tensorflow/models/blob/\
-    0344c5503ee55e24f0de7f37336a6e08f10976fd/\
-    research/slim/nets/mobilenet/mobilenet.py#L62-L69
-    """
+def make_divisible(v: int, divisor: int = 8, min_value: int = 1):
+
     if min_value is None:
         min_value = divisor
     new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
@@ -132,6 +136,7 @@ def make_divisible(v, divisor=8, min_value=1):
 
 
 class USConv2d(nn.Conv2d):
+
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,
                  padding=0, dilation=1, groups=1, depthwise=False, bias=True,
                  us=[True, True], ratio=[1, 1], conv_averaged=False):
@@ -148,6 +153,7 @@ class USConv2d(nn.Conv2d):
         self.ratio = ratio
 
     def forward(self, input):
+
         if self.us[0]:
             self.in_channels = make_divisible(
                 self.in_channels_max
@@ -173,7 +179,8 @@ class USConv2d(nn.Conv2d):
 
 
 class USLinear(nn.Linear):
-    def __init__(self, in_features, out_features, bias=True, us=None):
+
+    def __init__(self, in_features, out_features, bias=True, us: None | tuple[bool, bool] = None):
         super(USLinear, self).__init__(
             in_features, out_features, bias=bias)
         if us is None:
@@ -184,6 +191,7 @@ class USLinear(nn.Linear):
         self.us = us
 
     def forward(self, input):
+
         if self.us[0]:
             self.in_features = make_divisible(
                 self.in_features_max * self.width_mult)
@@ -199,7 +207,8 @@ class USLinear(nn.Linear):
 
 
 class USBatchNorm2d(nn.BatchNorm2d):
-    def __init__(self, width_mult_list, num_features, ratio=1):
+
+    def __init__(self, width_mult_list: List[float], num_features: int, ratio: int = 1):
         super(USBatchNorm2d, self).__init__(
             num_features, affine=True, track_running_stats=False)
         self.width_mult_list = width_mult_list
@@ -214,7 +223,7 @@ class USBatchNorm2d(nn.BatchNorm2d):
         self.width_mult = None
         self.ignore_model_profiling = True
 
-    def forward(self, input):
+    def forward(self, input: Tensor) -> Tensor:
         weight = self.weight
         bias = self.bias
         c = make_divisible(
