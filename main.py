@@ -1,17 +1,34 @@
+import argparse
+
+import configs
 from core import SegTrainer
-from configs import DucknetConfig, load_parser
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 if __name__ == '__main__':
-    config = DucknetConfig()
 
+    # Get available configurations
+    available_configs = configs.list_available_configs()
+
+    # Set up command-line argument parsing
+    parser = argparse.ArgumentParser(description="Run segmentation training or testing")
+
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        choices=available_configs,
+        help=f"Choose a config from the available options: {available_configs}"
+    )
+
+    args = parser.parse_args()
+
+    # Fetch the selected configuration
+    selected_config = args.config
+    config = configs.get_config(selected_config)()
     config.init_dependent_config()
-
-    # If you want to use command-line arguments, please uncomment the following line
-    # config = load_parser(config)
 
     trainer = SegTrainer(config)
 

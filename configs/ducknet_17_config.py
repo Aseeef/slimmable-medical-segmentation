@@ -1,12 +1,17 @@
 import os.path
 
 from .base_config import BaseConfig
+from .config_registry import register_config
 
 
-class DucknetConfig(BaseConfig):
+@register_config
+class DuckNet17Config(BaseConfig):
 
     def __init__(self,):
         super().__init__()
+        # Change Save Dir for different configs!
+        self.save_dir = 'save/ducknet_17'
+
         # Dataset
         self.dataset = 'polyp'
         self.subset = 'kvasir'
@@ -15,7 +20,7 @@ class DucknetConfig(BaseConfig):
 
         # Model
         self.model = 'ducknet'
-        self.base_channel = 32
+        self.base_channel = 17
 
         # Training
         self.total_epoch = 600
