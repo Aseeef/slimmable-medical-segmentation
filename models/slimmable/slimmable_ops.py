@@ -2,6 +2,8 @@
 CREDIT: https://github.com/JiahuiYu/slimmable_networks/blob/master/models/slimmable_ops.py
 """
 import torch.nn as nn
+import torch.nn.functional as F
+
 
 class SwitchableBatchNorm2d(nn.Module):
     def __init__(self, width_mult_list, num_features_list):
@@ -17,7 +19,7 @@ class SwitchableBatchNorm2d(nn.Module):
         self.ignore_model_profiling = True
 
     def forward(self, input):
-        idx = width_mult_list.index(self.width_mult)
+        idx = self.width_mult_list.index(self.width_mult)
         y = self.bn[idx](input)
         return y
 
@@ -51,6 +53,44 @@ class SlimmableConv2d(nn.Conv2d):
         y = nn.functional.conv2d(
             input, weight, bias, self.stride, self.padding,
             self.dilation, self.groups)
+        return y
+
+
+class SlimmableConvTranspose2d(nn.ConvTranspose2d):
+    def __init__(self, width_mult_list, in_channels_list, out_channels_list, kernel_size,
+                 stride=1, padding=0, output_padding=0, dilation=1,
+                 groups_list=[1], bias=True):
+        super(SlimmableConvTranspose2d, self).__init__(
+            max(in_channels_list), max(out_channels_list), kernel_size,
+            stride=stride, padding=padding, output_padding=output_padding,
+            groups=max(groups_list), bias=bias, dilation=dilation)
+        self.width_mult_list = width_mult_list
+        self.in_channels_list = in_channels_list
+        self.out_channels_list = out_channels_list
+        self.groups_list = groups_list
+        if self.groups_list == [1]:
+            self.groups_list = [1 for _ in range(len(in_channels_list))]
+        # Use the largest width multiplier as default.
+        self.width_mult = max(width_mult_list)
+        # Store output_padding for use in the forward pass.
+        self.output_padding = output_padding
+
+    def forward(self, input):
+        # Select the configuration based on the current width multiplier.
+        idx = self.width_mult_list.index(self.width_mult)
+        self.in_channels = self.in_channels_list[idx]
+        self.out_channels = self.out_channels_list[idx]
+        self.groups = self.groups_list[idx]
+        # For ConvTranspose2d, weight shape is:
+        # (in_channels, out_channels//groups, kernel_height, kernel_width)
+        weight = self.weight[:self.in_channels, :self.out_channels // self.groups, :, :]
+        if self.bias is not None:
+            bias = self.bias[:self.out_channels]
+        else:
+            bias = self.bias
+        y = F.conv_transpose2d(
+            input, weight, bias, self.stride, self.padding,
+            self.output_padding, self.groups, self.dilation)
         return y
 
 
@@ -90,11 +130,11 @@ def make_divisible(v, divisor=8, min_value=1):
         new_v += divisor
     return new_v
 
-# TODO: we should probably do the universally slimmable
+
 class USConv2d(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,
                  padding=0, dilation=1, groups=1, depthwise=False, bias=True,
-                 us=[True, True], ratio=[1, 1]):
+                 us=[True, True], ratio=[1, 1], conv_averaged=False):
         super(USConv2d, self).__init__(
             in_channels, out_channels,
             kernel_size, stride=stride, padding=padding, dilation=dilation,
@@ -103,6 +143,7 @@ class USConv2d(nn.Conv2d):
         self.in_channels_max = in_channels
         self.out_channels_max = out_channels
         self.width_mult = None
+        self.conv_averaged = conv_averaged
         self.us = us
         self.ratio = ratio
 
@@ -126,15 +167,17 @@ class USConv2d(nn.Conv2d):
         y = nn.functional.conv2d(
             input, weight, bias, self.stride, self.padding,
             self.dilation, self.groups)
-        if getattr(FLAGS, 'conv_averaged', False):
+        if self.conv_averaged:
             y = y * (max(self.in_channels_list) / self.in_channels)
         return y
 
 
 class USLinear(nn.Linear):
-    def __init__(self, in_features, out_features, bias=True, us=[True, True]):
+    def __init__(self, in_features, out_features, bias=True, us=None):
         super(USLinear, self).__init__(
             in_features, out_features, bias=bias)
+        if us is None:
+            us = [True, True]
         self.in_features_max = in_features
         self.out_features_max = out_features
         self.width_mult = None
@@ -156,16 +199,17 @@ class USLinear(nn.Linear):
 
 
 class USBatchNorm2d(nn.BatchNorm2d):
-    def __init__(self, num_features, ratio=1):
+    def __init__(self, width_mult_list, num_features, ratio=1):
         super(USBatchNorm2d, self).__init__(
             num_features, affine=True, track_running_stats=False)
+        self.width_mult_list = width_mult_list
         self.num_features_max = num_features
         # for tracking performance during training
         self.bn = nn.ModuleList([
             nn.BatchNorm2d(i, affine=False) for i in [
                 make_divisible(
                     self.num_features_max * width_mult / ratio) * ratio
-                for width_mult in FLAGS.width_mult_list]])
+                for width_mult in self.width_mult_list]])
         self.ratio = ratio
         self.width_mult = None
         self.ignore_model_profiling = True
@@ -175,8 +219,8 @@ class USBatchNorm2d(nn.BatchNorm2d):
         bias = self.bias
         c = make_divisible(
             self.num_features_max * self.width_mult / self.ratio) * self.ratio
-        if self.width_mult in FLAGS.width_mult_list:
-            idx = FLAGS.width_mult_list.index(self.width_mult)
+        if self.width_mult in self.width_mult_list:
+            idx = self.width_mult_list.index(self.width_mult)
             y = nn.functional.batch_norm(
                 input,
                 self.bn[idx].running_mean[:c],
@@ -203,7 +247,7 @@ def pop_channels(autoslim_channels):
     return [i.pop(0) for i in autoslim_channels]
 
 
-def bn_calibration_init(m):
+def bn_calibration_init(m, cumulative_bn_stats=False):
     """ calculating post-statistics of batch normalization """
     if getattr(m, 'track_running_stats', False):
         # reset all values for post-statistics
@@ -211,5 +255,5 @@ def bn_calibration_init(m):
         # set bn in training mode to update post-statistics
         m.training = True
         # if use cumulative moving average
-        if getattr(FLAGS, 'cumulative_bn_stats', False):
+        if cumulative_bn_stats:
             m.momentum = None
