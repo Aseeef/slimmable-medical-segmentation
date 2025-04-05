@@ -206,7 +206,7 @@ class SlimmableLinear(nn.Linear):
         return nn.functional.linear(input, weight, bias)
 
 
-def make_divisible(v: int, divisor: int = 8, min_value: int = 1):
+def make_divisible(v: float, divisor: int = 8, min_value: int = 1):
     """
     Ensures that the number `v` is divisible by `divisor` and greater than `min_value`.
 
@@ -296,6 +296,51 @@ class USConv2d(nn.Conv2d):
         return y
 
 
+class USConvTranspose2d(nn.ConvTranspose2d):
+
+    def __init__(self, in_channels: int, out_channels: int,
+                 kernel_size, stride: int | tuple[int, int] = 1, padding: int | tuple[int, int] = 0,
+                 output_padding: int | tuple[int, ...] = 0,
+                 dilation: int | tuple[int, int] = 1, groups: int = 1,
+                 depthwise: bool = False, bias: bool = True,
+                 us: tuple[bool, bool] = [True, True], ratio: tuple[int, int] = [1, 1], conv_averaged: bool = False):
+        super(USConv2d, self).__init__(
+            in_channels, out_channels,
+            kernel_size, stride=stride, padding=padding, output_padding=output_padding, dilation=dilation,
+            groups=groups, bias=bias)
+        self.depthwise = depthwise
+        self.in_channels_max = in_channels
+        self.out_channels_max = out_channels
+        self.width_mult = None
+        self.conv_averaged = conv_averaged
+        self.us = us
+        self.ratio = ratio
+
+    def forward(self, input: Tensor) -> Tensor:
+        if self.us[0]:
+            self.in_channels = make_divisible(
+                self.in_channels_max
+                * self.width_mult
+                / self.ratio[0]) * self.ratio[0]
+        if self.us[1]:
+            self.out_channels = make_divisible(
+                self.out_channels_max
+                * self.width_mult
+                / self.ratio[1]) * self.ratio[1]
+        self.groups = self.in_channels if self.depthwise else 1
+        weight = self.weight[:self.out_channels, :self.in_channels, :, :]
+        if self.bias is not None:
+            bias = self.bias[:self.out_channels]
+        else:
+            bias = self.bias
+        y = nn.functional.conv_transpose2d(
+            input, weight, bias, self.stride, self.padding, self.output_padding,
+            self.groups, self.dilation)
+        if self.conv_averaged:
+            y = y * (max(self.in_channels_list) / self.in_channels)
+        return y
+
+
 class USLinear(nn.Linear):
     """
     A Linear layer with input/output features adjustable according to a width multiplier.
@@ -343,19 +388,18 @@ class USBatchNorm2d(nn.BatchNorm2d):
     """
     A BatchNorm2d layer that dynamically adjusts the number of features based on width multiplier.
 
-    Args:
-        width_mult_list (List[float]): List of width multipliers.
-        num_features (int): Maximum number of features.
-        ratio (int): Channel alignment ratio (used with make_divisible). Default is 1.
+    Args: num_features (int): Maximum number of features. ratio (int): Channel alignment ratio (used with
+    make_divisible). Default is 1. width_mult_list (List[float]): List of width multipliers. Specifying is
+    recommended for performance and separate tracking of statistics.
     """
 
-    def __init__(self, width_mult_list: List[float], num_features: int, ratio: int = 1):
+    def __init__(self, num_features: int, ratio: int = 1, width_mult_list: List[float] = None):
         super(USBatchNorm2d, self).__init__(
             num_features, affine=True, track_running_stats=False)
         self.width_mult_list = width_mult_list
         self.num_features_max = num_features
         # for tracking performance during training
-        self.bn = nn.ModuleList([
+        self.bn = None if width_mult_list is None else nn.ModuleList([
             nn.BatchNorm2d(i, affine=False) for i in [
                 make_divisible(
                     self.num_features_max * width_mult / ratio) * ratio
@@ -378,7 +422,7 @@ class USBatchNorm2d(nn.BatchNorm2d):
         bias = self.bias
         c = make_divisible(
             self.num_features_max * self.width_mult / self.ratio) * self.ratio
-        if self.width_mult in self.width_mult_list:
+        if self.width_mult_list is not None or self.width_mult in self.width_mult_list:
             idx = self.width_mult_list.index(self.width_mult)
             y = nn.functional.batch_norm(
                 input,
