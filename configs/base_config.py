@@ -111,6 +111,9 @@ class BaseConfig:
         self.kd_loss_coefficient = 1.0
         self.kd_temperature = 4.0
 
+        # Slim Size Multipliers
+        self.slim_width_mult_list = None
+
     def init_dependent_config(self):
         assert len(self.metrics) > 0
 

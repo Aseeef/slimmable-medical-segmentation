@@ -206,7 +206,7 @@ class SlimmableLinear(nn.Linear):
         return nn.functional.linear(input, weight, bias)
 
 
-def make_divisible(v: float, divisor: int = 8, min_value: int = 1):
+def make_divisible(v: float, divisor: int = 8, min_value: int = 1) -> int:
     """
     Ensures that the number `v` is divisible by `divisor` and greater than `min_value`.
 

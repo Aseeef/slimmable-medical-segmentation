@@ -5,7 +5,7 @@ from .resunet import ResUNet
 from .resunetpp import ResUNetPP
 from .unet import UNet
 from .unetpp import UNetPP
-from .model_registry import model_hub, aux_models
+from .model_registry import model_hub, aux_models, slimmable_models
 
 
 def get_model(config):
@@ -16,7 +16,10 @@ def get_model(config):
 
     elif config.model in model_hub.keys():
         if config.model in aux_models:  # models support auxiliary heads
-            model = model_hub[config.model](num_class=config.num_class, base_channel=config.base_channel, use_aux=config.use_aux)
+            model = model_hub[config.model](slim_width_mult_list=config.slim_width_mult_list, num_class=config.num_class, base_channel=config.base_channel, use_aux=config.use_aux)
+
+        elif config.model in slimmable_models:
+            model = model_hub[config.model](num_class=config.num_class, base_channel=config.base_channel)
 
         else:
             if config.use_aux:
