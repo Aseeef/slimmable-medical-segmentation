@@ -5,7 +5,7 @@ from .config_registry import register_config
 
 
 @register_config
-class SlimDuckNet34Config(BaseConfig):
+class SlimDuckNetConfig(BaseConfig):
 
     def __init__(self,):
         super().__init__()
