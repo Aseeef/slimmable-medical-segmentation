@@ -130,7 +130,7 @@ class SlimmableDUCK(nn.Module):
         '''
         super().__init__()
         self.in_bn = nn.Sequential(
-                        nn.BatchNorm2d(in_channels_list),
+                        SwitchableBatchNorm2d(width_mult_list, in_channels_list),
                         Activation(act_type)
                     )
         self.branch1 = SlimmableWidescopeBlock(width_mult_list, in_channels_list, out_channels_list, act_type)
