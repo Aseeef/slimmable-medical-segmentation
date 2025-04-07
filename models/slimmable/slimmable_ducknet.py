@@ -9,9 +9,9 @@ from typing import List
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .slimmable.slimmable_ops import SwitchableBatchNorm2d
+from models.slimmable.slimmable_ops import SwitchableBatchNorm2d
 from .slimmable_modules import slimmable_conv1x1, SlimmableConvBNAct, Activation
-from .model_registry import register_model, slimmable_models
+from models.model_registry import register_model, slimmable_models
 
 
 @register_model(slimmable_models)
