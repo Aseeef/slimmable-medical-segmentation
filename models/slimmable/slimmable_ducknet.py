@@ -138,7 +138,7 @@ class SlimmableDUCK(nn.Module):
         self.branch3 = SlimmableResidualBlock(width_mult_list, in_channels_list, out_channels_list, act_type)
         self.branch4 = nn.Sequential(
                             SlimmableResidualBlock(width_mult_list, in_channels_list, out_channels_list, act_type),
-                            SlimmableResidualBlock(width_mult_list, in_channels_list, out_channels_list, act_type),
+                            SlimmableResidualBlock(width_mult_list, out_channels_list, out_channels_list, act_type),
                         )
         self.branch5 = nn.Sequential(
                             SlimmableResidualBlock(width_mult_list, in_channels_list, out_channels_list, act_type),
