@@ -24,7 +24,7 @@ class SlimDuckNetConfig(BaseConfig):
         self.is_slimmable = True
 
         # Training
-        self.total_epoch = 2      # CHANGED FOR TESTING NORMALLY SET 600
+        self.total_epoch = 5      # CHANGED FOR TESTING NORMALLY SET 600
         self.train_bs = 2  # this is PER GPU (CHANGED FOR TESTING - NORMALLY SET TO 16)
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'

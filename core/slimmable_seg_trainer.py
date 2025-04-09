@@ -127,4 +127,4 @@ class SlimmableSegTrainer(SegTrainer):
         student_log_probs = F.log_softmax(student_preds / T, dim=1)
         teacher_probs     = F.softmax(teacher_preds / T,    dim=1)
         loss_kl = F.kl_div(student_log_probs, teacher_probs, reduction='batchmean')
-        return loss_kl * (T * T)  # classical factor for temperature scaling
+        return loss_kl * (T * T)  # temperature scaling

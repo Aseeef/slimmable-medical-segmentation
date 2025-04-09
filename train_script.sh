@@ -14,6 +14,7 @@ module load miniconda
 conda activate /projectnb/ec523/projects/Team_A+/dl_prj_env
 #python3 ./main.py
 
+cd /projectnb/ec523/projects/Team_A+/David_slimmable_net
+
 # To train slimmable DUCKNet:
 python main.py --config slimducknetconfig
-
