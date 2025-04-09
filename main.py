@@ -2,6 +2,7 @@ import argparse
 
 import configs
 from core import SegTrainer
+from core.slimmable_seg_trainer import SlimmableSegTrainer
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -30,7 +31,11 @@ if __name__ == '__main__':
     config = configs.get_config(selected_config)()
     config.init_dependent_config()
 
-    trainer = SegTrainer(config)
+    # Create the correct trainer. Slimmable or not
+    if getattr(config, 'is_slimmable', False):
+        trainer = SlimmableSegTrainer(config)
+    else:
+        trainer = SegTrainer(config)
 
     if config.is_testing:
         trainer.predict(config)
