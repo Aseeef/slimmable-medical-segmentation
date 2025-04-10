@@ -1,7 +1,18 @@
 import os, torch
 
 from .ducknet import DuckNet
+'''
+BRACS Ducknet Imports
+'''
+#Segmentation Head Unfrozen
 from .BRACSDuckNet import BRACSDuckNet
+#Segmentation head and Convlayer 1 Unfrozen
+from .BRACSDuckNet_UF1 import BRACSDuckNet_UF1
+from .BRACSDuckNet_UF1_FCHead import BRACSDuckNet_UF1_FCHead
+
+#3-class segmentation: left and right arytenoids.
+from .ArytenoidsDuckNet_UF1_FCHead import ArytenoidsDuckNet_UF1_FCHead
+
 from .resunet import ResUNet
 from .resunetpp import ResUNetPP
 from .unet import UNet

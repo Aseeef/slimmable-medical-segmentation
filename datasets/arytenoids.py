@@ -7,8 +7,27 @@ from albumentations.pytorch import ToTensorV2
 from .dataset_registry import register_dataset
 
 
+#randomly flip to prevent model only learning one arytenoid
+def random_horizontal_flip_and_swap(image, mask_onehot, p=0.5):
+    """
+    Args:
+        image: [C, H, W] torch.Tensor
+        mask_onehot: [C, H, W] torch.Tensor (one-hot, e.g., 3 channels for 3 classes)
+        p: probability of flipping
+    Returns:
+        flipped or original image and mask
+    """
+    if random.random() < p:
+        # Horizontal flip (flip along width axis)
+        image = torch.flip(image, dims=[2])
+        mask_onehot = torch.flip(mask_onehot, dims=[2])
+
+        # Swap class 0 and class 1 channels
+        mask_onehot = mask_onehot.clone()  # in case of shared memory
+        mask_onehot[[0, 1]] = mask_onehot[[1, 0]]  # swap LA-LAF <-> RA-RAF
+    return image, mask_onehot
 @register_dataset
-class Larynx_Seg(Dataset):
+class Arytenoids_Seg(Dataset):
     def __init__(self, config, mode='train'):
         assert mode in ['train', 'val', 'test']
         mode_folder = mode if mode in ['train', 'test'] else 'validation'
@@ -57,6 +76,8 @@ class Larynx_Seg(Dataset):
         # Perform augmentation
         augmented = self.transform(image=image, mask=mask)
         image, mask = augmented['image'], augmented['mask']
+        image, mask = random_horizontal_flip_and_swap(image, mask, p=0.5)
+
 
         return image, mask
 

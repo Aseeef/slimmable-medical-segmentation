@@ -41,8 +41,11 @@ class SegTrainer(BaseTrainer):
             if config.use_aux:
                 with amp.autocast(enabled=config.amp_training):
                     preds, preds_aux = self.model(images, is_training=True)
-                    loss = self.loss_fn(preds, masks)
 
+                    if config.class_weights is not None: #Pass optional weights from config
+                        loss = self.loss_fn(preds, masks, config.class_weights)
+                    else:
+                        loss = self.loss_fn(preds, masks)
                 masks_auxs = masks.unsqueeze(1).float()
                 if config.aux_coef is None:
                     config.aux_coef = torch.ones(len(preds_aux))
@@ -60,7 +63,8 @@ class SegTrainer(BaseTrainer):
             else:   # Vanilla forward path
                 with amp.autocast(enabled=config.amp_training):
                     preds = self.model(images)
-                    loss = self.loss_fn(preds, masks)
+                    #CHNG: ADDED DYNAMIC EXAMPLE SAVE PATH
+                    loss = self.loss_fn(preds, masks, save_path = config.save_example_path, class_weights = config.class_weights)
 
             if config.use_tb and self.main_rank:
                 self.writer.add_scalar('train/loss', loss.detach(), self.train_itrs)
@@ -111,9 +115,22 @@ class SegTrainer(BaseTrainer):
 
             masks = masks.to(self.device, dtype=torch.long)
 
+            #PERMUTE MASKS TO [B C H W]
+            masks = masks.permute(0, 3, 1, 2)
+            
+
             preds = self.ema_model.ema(images)
             if H % stride != 0 or W % stride != 0:
                 preds = F.interpolate(preds, masks.size()[1:], mode='bilinear', align_corners=True)
+
+
+            #Torch metrics expects INTEGER mask classes
+            # Convert predictions to class indices
+            preds = torch.argmax(preds, dim=1)  # shape: [B, H, W]
+
+            # Convert one-hot target to class indices if needed
+            if masks.ndim == 4 and masks.shape[1] > 1:
+                masks = torch.argmax(masks, dim=1)  # shape: [B, H, W]
 
             for metric in self.metrics:
                 metric.update(preds.detach(), masks)
@@ -152,7 +169,7 @@ class SegTrainer(BaseTrainer):
 
         self.logger.info('\nStart predicting...\n')
 
-        self.model.eval() # Put model in evalation mode
+        self.model.eval() # Put model in evaluation mode
 
         for (images, images_aug, img_names) in tqdm(self.test_loader):
             images_aug = images_aug.to(self.device, dtype=torch.float32)

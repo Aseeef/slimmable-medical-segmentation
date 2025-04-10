@@ -1,6 +1,8 @@
 from torch.utils.data import DataLoader
 
 from .polyp import Polyp
+from .larynx_polyp import Larynx_Seg
+from .arytenoids import Arytenoids_Seg
 from .dataset_registry import dataset_hub
 
 
