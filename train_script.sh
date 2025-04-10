@@ -5,12 +5,13 @@
 #$ -m beas
 #$ -N larynx_ducknet_train
 #$ -j y
-#$ -o train.logs
+#$ -o slim_train.logs
 #$ -pe omp 4
 #$ -l gpus=2
 #$ -l gpu_c=8.0
+#$ -l gpu_memory=24G
 
 module load miniconda
 conda activate /projectnb/ec523/projects/Team_A+/dl_prj_env
-python3 ./main.py --config
+python3 ./main.py --config slimducknetconfig
 

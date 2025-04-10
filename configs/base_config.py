@@ -111,6 +111,15 @@ class BaseConfig:
         self.kd_loss_coefficient = 1.0
         self.kd_temperature = 4.0
 
+        # Slim Size Multipliers
+        self.slimmable_training = False
+        self.nonuniform = False
+        self.num_sample_training = 2
+        self.slim_width_mult_list = None
+
+        # The trainer to use
+        self.trainer = 'segtrainer'
+
     def init_dependent_config(self):
         assert len(self.metrics) > 0
 

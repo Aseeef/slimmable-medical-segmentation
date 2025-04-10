@@ -1,5 +1,6 @@
 model_hub = {}
 aux_models = []
+slimmable_models = []
 
 
 def register_model(*other_registries):
