@@ -50,12 +50,15 @@ class SlimmableSegTrainer(SegTrainer):
                 preds_largest = self.model(images)
                 loss_largest = self.loss_fn(preds_largest, masks)
                 
+                #BEGIN DELETE HERE
                 # Use other teacher outputs if KD is set
                 if config.kd_training:
                     with torch.no_grad():
                         teacher_preds = self.teacher_model(images)
-                    loss_kd = self._kd_loss(config, preds_largest, teacher_preds)
+                    #loss_kd = self._kd_loss(config, preds_largest, teacher_preds)
+                    loss_kd = kd_loss_fn(config, preds_largest, teacher_preds)
                     loss_largest += config.kd_loss_coefficient * loss_kd
+                #END DELETE HERE
 
             # For in-place distillation
             if self.inplace_distill:
@@ -78,13 +81,15 @@ class SlimmableSegTrainer(SegTrainer):
                     loss_w = self.loss_fn(preds, masks)
 
                     # checking if enabled in the config KD from the teacher
+                    #BEGIN DELETE HERE
                     if config.kd_training:
                         with torch.no_grad():
                             teacher_preds = self.teacher_model(images)
-                        loss_kd_w = self._kd_loss(config, preds, teacher_preds)
+                        #loss_kd_w = self._kd_loss(config, preds, teacher_preds)
+                        loss_kd_w = kd_loss_fn(config, preds, teacher_preds) #pred or largest_pred
                         loss_w += config.kd_loss_coefficient * loss_kd_w
 
-                    # In place distillation from largest predictions
+                    # In place distillation from largest (1.0 width multiplier) predictions
                     if self.inplace_distill and (soft_target is not None):
                         loss_inplace_kd = F.kl_div(
                             input=F.log_softmax(preds, dim=1), 
@@ -92,6 +97,7 @@ class SlimmableSegTrainer(SegTrainer):
                             reduction='batchmean'
                         )
                         loss_w += config.inplace_distill_coef * loss_inplace_kd     # adjusting the coefficient
+                    #END DELETE HERE
 
                 # backprop step for smaller width
                 self.scaler.scale(loss_w).backward()
