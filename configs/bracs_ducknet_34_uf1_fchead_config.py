@@ -30,7 +30,7 @@ class BracsDuckNet34_uf1_fchead_Config(BaseConfig):
         # Training
         self.total_epoch = 600
         self.train_bs = 1  # this is PER GPU
-        self.loss_type = 'dice'
+        self.loss_type = 'modded_dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-5
 

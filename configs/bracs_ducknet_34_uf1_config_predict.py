@@ -28,7 +28,7 @@ class BracsDuckNet34_uf1_Config_Predict(BaseConfig):
         # Training
         self.total_epoch = 602
         self.train_bs = 4  # this is PER GPU
-        self.loss_type = 'dice'
+        self.loss_type = 'modded_dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
         
