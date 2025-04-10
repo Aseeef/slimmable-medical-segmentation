@@ -10,8 +10,10 @@ from .base_trainer import BaseTrainer
 from .loss import kd_loss_fn
 from models import get_teacher_model
 from utils import (get_seg_metrics, sampler_set_epoch, get_colormap)
+from .trainer_registry import register_trainer
 
 
+@register_trainer
 class SegTrainer(BaseTrainer):
     def __init__(self, config):
         super().__init__(config)

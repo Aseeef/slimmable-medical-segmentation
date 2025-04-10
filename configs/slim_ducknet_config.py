@@ -54,3 +54,4 @@ class SlimDuckNetConfig(BaseConfig):
 
         # Slimmable
         self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
+        self.trainer = 'slimmablesegtrainer'

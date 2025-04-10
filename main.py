@@ -1,7 +1,7 @@
 import argparse
 
 import configs
-from core import SegTrainer
+from core import get_trainer
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     config = configs.get_config(selected_config)()
     config.init_dependent_config()
 
-    trainer = SegTrainer(config)
+    trainer = get_trainer(config)
 
     if config.is_testing:
         trainer.predict(config)
