@@ -75,3 +75,6 @@ class BracsDuckNet34_uf1_fchead_Config(BaseConfig):
         #self.affine_rotate = (-10, 10)
         #self.affine_translate = (-0.05, 0.05)
         #self.affine_scale = (0.8, 1.2)
+
+        # Trainer
+        self.trainer = 'bracstrainer'

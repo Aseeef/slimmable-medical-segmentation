@@ -5,6 +5,7 @@ from PIL import Image
 from tqdm import tqdm
 from torch.cuda import amp
 import torch.nn.functional as F
+from typing_extensions import override
 
 from .base_trainer import BaseTrainer
 from .loss import kd_loss_fn
@@ -14,7 +15,7 @@ from .trainer_registry import register_trainer
 
 
 @register_trainer
-class SegTrainer(BaseTrainer):
+class BracsTrainer(BaseTrainer):
     def __init__(self, config):
         super().__init__(config)
         if config.is_testing:
@@ -23,10 +24,11 @@ class SegTrainer(BaseTrainer):
             self.teacher_model = get_teacher_model(config, self.device)
             self.metrics = [get_seg_metrics(config, metric_name).to(self.device) for metric_name in config.metrics]
 
+    @override
     def train_one_epoch(self, config):
         self.model.train()
 
-        sampler_set_epoch(config, self.train_loader, self.cur_epoch)
+        sampler_set_epoch(config, self.train_loader, self.cur_epoch) 
 
         pbar = tqdm(self.train_loader) if self.main_rank else self.train_loader
 
@@ -35,7 +37,7 @@ class SegTrainer(BaseTrainer):
             self.train_itrs += 1
 
             images = images.to(self.device, dtype=torch.float32)
-            masks = masks.to(self.device, dtype=torch.long)
+            masks = masks.to(self.device, dtype=torch.long)    
 
             self.optimizer.zero_grad()
 
@@ -43,8 +45,11 @@ class SegTrainer(BaseTrainer):
             if config.use_aux:
                 with amp.autocast(enabled=config.amp_training):
                     preds, preds_aux = self.model(images, is_training=True)
-                    loss = self.loss_fn(preds, masks)
 
+                    if config.class_weights is not None: #Pass optional weights from config
+                        loss = self.loss_fn(preds, masks, config.class_weights)
+                    else:
+                        loss = self.loss_fn(preds, masks)
                 masks_auxs = masks.unsqueeze(1).float()
                 if config.aux_coef is None:
                     config.aux_coef = torch.ones(len(preds_aux))
@@ -62,7 +67,8 @@ class SegTrainer(BaseTrainer):
             else:   # Vanilla forward path
                 with amp.autocast(enabled=config.amp_training):
                     preds = self.model(images)
-                    loss = self.loss_fn(preds, masks)
+                    #CHNG: ADDED DYNAMIC EXAMPLE SAVE PATH
+                    loss = self.loss_fn(preds, masks, save_path = config.save_example_path, class_weights = config.class_weights)
 
             if config.use_tb and self.main_rank:
                 self.writer.add_scalar('train/loss', loss.detach(), self.train_itrs)
@@ -89,21 +95,21 @@ class SegTrainer(BaseTrainer):
             self.ema_model.update(self.model, self.train_itrs)
 
             if self.main_rank:
-                pbar.set_description(('%s'*2) %
+                pbar.set_description(('%s'*2) % 
                                 (f'Epoch:{self.cur_epoch}/{config.total_epoch}{" "*4}|',
                                 f'Loss:{loss.detach():4.4g}{" "*4}|',)
                                 )
 
         return
 
-    @torch.no_grad()
+    @override @torch.no_grad()
     def validate(self, config, loader, val_best=False):
         pbar = tqdm(loader) if self.main_rank else loader
         for (images, masks) in pbar:
             images = images.to(self.device, dtype=torch.float32)
 
             # In order to validate different size of images, we can resize the image to be compatible with the model's stride,
-            # and then resize the predicted mask back to the image size to calculate the metric.
+            # and then resize the predicted mask back to the image size to calculate the metric. 
             # If you don't want this, simply set `val_img_stride=1` within the config file.
             _, _, H, W = images.shape
             stride = config.val_img_stride
@@ -113,9 +119,22 @@ class SegTrainer(BaseTrainer):
 
             masks = masks.to(self.device, dtype=torch.long)
 
+            #PERMUTE MASKS TO [B C H W]
+            masks = masks.permute(0, 3, 1, 2)
+            
+
             preds = self.ema_model.ema(images)
             if H % stride != 0 or W % stride != 0:
                 preds = F.interpolate(preds, masks.size()[1:], mode='bilinear', align_corners=True)
+
+
+            #Torch metrics expects INTEGER mask classes
+            # Convert predictions to class indices
+            preds = torch.argmax(preds, dim=1)  # shape: [B, H, W]
+
+            # Convert one-hot target to class indices if needed
+            if masks.ndim == 4 and masks.shape[1] > 1:
+                masks = torch.argmax(masks, dim=1)  # shape: [B, H, W]
 
             for metric in self.metrics:
                 metric.update(preds.detach(), masks)
@@ -129,7 +148,7 @@ class SegTrainer(BaseTrainer):
         if self.main_rank:
             for i in range(len(config.metrics)):
                 if val_best:
-                    self.logger.info(f'\n\nTrain {config.total_epoch} epochs finished.' +
+                    self.logger.info(f'\n\nTrain {config.total_epoch} epochs finished.' + 
                                      f'\n\nBest m{config.metrics[i]} is: {scores[i].mean():.4f}\n')
                 else:
                     infos = f' Epoch{self.cur_epoch} m{config.metrics[i]}: {scores[i].mean():.4f} \t| ' + \
@@ -147,37 +166,48 @@ class SegTrainer(BaseTrainer):
             metric.reset()
         return score
 
-    @torch.no_grad()
-    def predict(self, config):
-        if config.DDP:
-            raise ValueError('Predict mode currently does not support DDP.')
+    @override
+    def load_ckpt(self, config):
+        if config.load_ckpt and os.path.isfile(config.load_ckpt_path):
+            checkpoint = torch.load(config.load_ckpt_path, map_location=torch.device(self.device))
 
-        self.logger.info('\nStart predicting...\n')
+            '''
+            Loading checkpoints HERE. 
+            '''
+            # self.model.load_state_dict(checkpoint['state_dict'])
 
-        self.model.eval() # Put model in evalation mode
+            ###################
+            state_dict = checkpoint["state_dict"]
 
-        for (images, images_aug, img_names) in tqdm(self.test_loader):
-            images_aug = images_aug.to(self.device, dtype=torch.float32)
+            # Remove any segmentation head keys that no longer match
+            filtered_state_dict = {
+                k: v for k, v in state_dict.items()
+                if not k.startswith("seg_head.") and not k.startswith("seg_head_bracs.")
+            }
 
-            preds = self.model(images_aug)
+            missing, unexpected = self.model.load_state_dict(filtered_state_dict, strict=False)
 
-            preds = self.colormap[preds.max(dim=1)[1]].cpu().numpy()
+            print("[INFO] Loaded pretrained weights (excluding final segmentation head).")
+            print("[INFO] Missing keys:", missing)
+            print("[INFO] Unexpected keys:", unexpected)
+            ####################
 
-            images = images.cpu().numpy()
+            if self.main_rank:
+                self.logger.info(f"Load model state dict from {config.load_ckpt_path}")
 
-            # Saving results
-            for i in range(preds.shape[0]):
-                save_path = os.path.join(config.save_dir, img_names[i])
-                save_suffix = img_names[i].split('.')[-1]
+            if not config.is_testing and config.resume_training:
+                self.cur_epoch = checkpoint['cur_epoch'] + 1
+                self.best_score = checkpoint['best_score']
+                self.optimizer.load_state_dict(checkpoint['optimizer'])
+                self.scheduler.load_state_dict(checkpoint['scheduler'])
+                self.train_itrs = self.cur_epoch * config.iters_per_epoch
+                if self.main_rank:
+                    self.logger.info(f"Resume training from {config.load_ckpt_path}")
 
-                pred = Image.fromarray(preds[i].astype(np.uint8))
-
-                if config.save_mask:
-                    pred.save(save_path)
-
-                if config.blend_prediction:
-                    save_blend_path = save_path.replace(f'.{save_suffix}', f'_blend.{save_suffix}')
-
-                    image = Image.fromarray(images[i].astype(np.uint8))
-                    image = Image.blend(image, pred, config.blend_alpha)
-                    image.save(save_blend_path)
+            del checkpoint
+        else:
+            if config.is_testing:
+                raise ValueError(f'Could not find any pretrained checkpoint at path: {config.load_ckpt_path}.')
+            else:
+                if self.main_rank:
+                    self.logger.info('[!] Train from scratch')

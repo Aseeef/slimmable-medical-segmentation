@@ -56,3 +56,6 @@ class BracsDuckNet34_uf1_Config_Predict(BaseConfig):
         self.affine_rotate = (-30, 30)
         self.affine_translate = (-0.125, 0.125)
         self.affine_scale = (0.5, 1.5)
+
+        # Trainer
+        self.trainer = 'bracstrainer'

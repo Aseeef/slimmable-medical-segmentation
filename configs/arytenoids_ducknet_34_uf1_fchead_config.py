@@ -60,4 +60,5 @@ class ArytenoidsDuckNet34_uf1_fchead_Config(BaseConfig):
         self.affine_rotate = (-10,10)
         self.affine_shear = (0.9,1.1)
 
-
+        # Trainer
+        self.trainer = 'bracstrainer'
