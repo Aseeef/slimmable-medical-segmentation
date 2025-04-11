@@ -26,7 +26,6 @@ DATASETS = {
     "CVC_ColonDB": "https://nc.aseef.dev/s/CVC_ColonDB/download/CVC-ColonDB.zip",
     "CVC_ClinicDB": "https://nc.aseef.dev/s/CVS_ClinicDB/download/CVC-ClinicDB.zip",
     "Kvasir_SEG": "https://nc.aseef.dev/s/Kvasir_SEG/download/Kvasir-SEG.zip",
-    "LarynxDataset_Preliminary": "https://nc.aseef.dev/s/LarynxDataset_Preliminary/download/LarynxDataset-Preliminary.zip",
 }
 
 
