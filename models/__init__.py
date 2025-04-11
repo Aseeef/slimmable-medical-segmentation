@@ -7,7 +7,13 @@ from .resunetpp import ResUNetPP
 from .unet import UNet
 from .unetpp import UNetPP
 from .model_registry import model_hub, aux_models, slimmable_models
-
+#Segmentation Head Unfrozen
+from .BRACSDuckNet import BRACSDuckNet
+#Segmentation head and Convlayer 1 Unfrozen
+from .BRACSDuckNet_UF1 import BRACSDuckNet_UF1
+from .BRACSDuckNet_UF1_FCHead import BRACSDuckNet_UF1_FCHead
+#3-class segmentation: left and right arytenoids.
+from .ArytenoidsDuckNet_UF1_FCHead import ArytenoidsDuckNet_UF1_FCHead
 
 def get_model(config):
     if config.model == 'smp':   # Use segmentation models pytorch

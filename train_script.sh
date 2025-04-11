@@ -1,9 +1,9 @@
 #!/bin/bash -l
 
 #$ -P ec523
-#$ -l h_rt=12:00:00
+#$ -l h_rt=24:00:00
 #$ -m beas
-#$ -N slim_ducknet_train
+#$ -N larynx_ducknet_train
 #$ -j y
 #$ -o slim_train.logs
 #$ -pe omp 4
