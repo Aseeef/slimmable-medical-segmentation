@@ -78,8 +78,10 @@ We adapted this PyTorch implementation to:
 ## 📊 Datasets
 
 - **Public Datasets:**
-  - [Kvasir-SEG](https://datasets.simula.no/kvasir/)
-  - [CVC-ClinicDB](https://www.colondata.com/)
+   - ETIS_LaribPolypDB
+   - CVC_ColonDB
+   - CVC_ClinicDB
+   - Kvasir_SEG
   
   Use:
   ```bash
