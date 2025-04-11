@@ -12,6 +12,7 @@ Supports **resume download**, **auto-extraction**, and **cleanup**.
     - CVC_ColonDB
     - CVC_ClinicDB
     - Kvasir_SEG
+    - LarynxDataset_Preliminary (Custom)
 
 # AI-generated: https://chatgpt.com/share/67df9a8c-d614-800f-af2a-a00c27fe6475
 """
@@ -25,7 +26,8 @@ DATASETS = {
     "ETIS_LaribPolypDB": "https://nc.aseef.dev/s/ETIS_LaribPolypDB/download/ETIS-LaribPolypDB.zip",
     "CVC_ColonDB": "https://nc.aseef.dev/s/CVC_ColonDB/download/CVC-ColonDB.zip",
     "CVC_ClinicDB": "https://nc.aseef.dev/s/CVS_ClinicDB/download/CVC-ClinicDB.zip",
-    "Kvasir_SEG": "https://nc.aseef.dev/s/Kvasir_SEG/download/Kvasir-SEG.zip"
+    "Kvasir_SEG": "https://nc.aseef.dev/s/Kvasir_SEG/download/Kvasir-SEG.zip",
+    "LarynxDataset_Preliminary": "https://nc.aseef.dev/s/LarynxDataset_Preliminary/download/LarynxDataset-Preliminary.zip",
 }
 
 
