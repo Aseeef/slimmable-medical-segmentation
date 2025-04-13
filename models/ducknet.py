@@ -180,19 +180,7 @@ class SeparatedBlock(nn.Sequential):
             ConvBNAct(out_channels, out_channels, (filter_size, 1), act_type=act_type),
         )
 
-class ConvBNAct_slimmable(nn.Sequential):    # ???????? Good idea to past this here rather than import from above?
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, dilation=1, groups=1,
-                    bias=False, act_type='relu', **kwargs):
-        if isinstance(kernel_size, list) or isinstance(kernel_size, tuple):
-            padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
-        elif isinstance(kernel_size, int):    
-            padding = (kernel_size - 1) // 2 * dilation
 
-        super().__init__(
-            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias),
-            nn.BatchNorm2d(out_channels),
-            Activation(act_type, **kwargs)
-        )
 
 # --------------------------- define slimablle blocks -----------------------------------
 
