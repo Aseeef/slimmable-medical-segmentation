@@ -3,15 +3,16 @@ import os.path
 from .base_config import BaseConfig
 from .config_registry import register_config
 
-
+"""
+This was a mistake.
+"""
 @register_config
-
-class SlimDuckNetConfig_Inference(BaseConfig):
+class DuckNet32Config(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/slimmable_ducknet_34'
+        self.save_dir = 'save/ducknet_32'
 
         # Dataset
         self.dataset = 'polyp'
@@ -20,8 +21,8 @@ class SlimDuckNetConfig_Inference(BaseConfig):
         self.use_test_set = True
 
         # Model
-        self.model = 'slimmableducknet'
-        self.base_channel = 34
+        self.model = 'ducknet'
+        self.base_channel = 32
 
         # Training
         self.total_epoch = 600
@@ -52,7 +53,3 @@ class SlimDuckNetConfig_Inference(BaseConfig):
         self.affine_rotate = (-180, 180)
         self.affine_translate = (-0.125, 0.125)
         self.affine_scale = (0.5, 1.5)
-
-        # Slimmable
-        self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
-        self.trainer = 'slimmablesegtrainer'

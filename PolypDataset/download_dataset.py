@@ -25,7 +25,7 @@ DATASETS = {
     "ETIS_LaribPolypDB": "https://nc.aseef.dev/s/ETIS_LaribPolypDB/download/ETIS-LaribPolypDB.zip",
     "CVC_ColonDB": "https://nc.aseef.dev/s/CVC_ColonDB/download/CVC-ColonDB.zip",
     "CVC_ClinicDB": "https://nc.aseef.dev/s/CVS_ClinicDB/download/CVC-ClinicDB.zip",
-    "Kvasir_SEG": "https://nc.aseef.dev/s/Kvasir_SEG/download/Kvasir-SEG.zip"
+    "Kvasir_SEG": "https://nc.aseef.dev/s/Kvasir_SEG/download/Kvasir-SEG.zip",
 }
 
 
