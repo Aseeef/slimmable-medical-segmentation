@@ -35,7 +35,7 @@ class BaseConfig:
         self.val_img_stride = 1
 
         # Testing
-        self.is_testing = False
+        self.is_testing = True
         self.test_bs = 16
         self.test_data_folder = None
         self.colormap = 'random'

@@ -3,6 +3,9 @@ import argparse
 import configs
 from core import SegTrainer
 
+# import inference runner
+from core import SlimmableSegInferenceRunner
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -11,6 +14,7 @@ if __name__ == '__main__':
 
     # Get available configurations
     available_configs = configs.list_available_configs()
+    print(available_configs)
 
     # Set up command-line argument parsing
     parser = argparse.ArgumentParser(description="Run segmentation training or testing")
@@ -30,9 +34,14 @@ if __name__ == '__main__':
     config = configs.get_config(selected_config)()
     config.init_dependent_config()
 
+    # instantiate trainer
     trainer = SegTrainer(config)
+    # instantiate inference runner
+    inference_runner = SlimmableSegInferenceRunner(config)
 
+    # run scripts
     if config.is_testing:
         trainer.predict(config)
+    # added for inference runner
     else:    
-        trainer.run(config)
+        inference_runner.test(config)

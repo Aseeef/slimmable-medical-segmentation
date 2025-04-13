@@ -1,6 +1,7 @@
 from .ducknet_34_config import DuckNet34Config
 from .ducknet_17_config import DuckNet17Config
 from .optuna_config import OptunaConfig
+from .slim_ducknet_config import SlimDuckNetConfig_Inference
 
 from .config_registry import config_hub
 
