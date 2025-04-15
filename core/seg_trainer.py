@@ -7,8 +7,6 @@ from torch.cuda import amp
 import torch.nn.functional as F
 
 from .base_trainer import BaseTrainer
-from .loss import kd_loss_fn
-from models import get_teacher_model
 from utils import (get_seg_metrics, sampler_set_epoch, get_colormap)
 from .trainer_registry import register_trainer
 
@@ -20,7 +18,6 @@ class SegTrainer(BaseTrainer):
         if config.is_testing:
             self.colormap = torch.tensor(get_colormap(config)).to(self.device)
         else:
-            self.teacher_model = get_teacher_model(config, self.device)
             self.metrics = [get_seg_metrics(config, metric_name).to(self.device) for metric_name in config.metrics]
 
     def train_one_epoch(self, config):
@@ -66,19 +63,6 @@ class SegTrainer(BaseTrainer):
 
             if config.use_tb and self.main_rank:
                 self.writer.add_scalar('train/loss', loss.detach(), self.train_itrs)
-
-            # Knowledge distillation
-            if config.kd_training:
-                with amp.autocast(enabled=config.amp_training):
-                    with torch.no_grad():
-                        teacher_preds = self.teacher_model(images)   # Teacher predictions
-
-                    loss_kd = kd_loss_fn(config, preds, teacher_preds.detach())
-                    loss += config.kd_loss_coefficient * loss_kd
-
-                if config.use_tb and self.main_rank:
-                    self.writer.add_scalar('train/loss_kd', loss_kd.detach(), self.train_itrs)
-                    self.writer.add_scalar('train/loss_total', loss.detach(), self.train_itrs)
 
             # Backward path
             self.scaler.scale(loss).backward()

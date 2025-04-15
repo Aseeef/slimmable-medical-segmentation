@@ -68,7 +68,7 @@ class BaseConfig:
         self.logger_name = None
 
         # Training setting
-        self.amp_training = False
+        self.amp_training = True
         self.resume_training = True
         self.load_ckpt = True
         self.load_ckpt_path = None
@@ -100,16 +100,6 @@ class BaseConfig:
         self.destroy_ddp_process = True
         self.local_rank = int(os.getenv('LOCAL_RANK', -1))
         self.main_rank = self.local_rank in [-1, 0]
-
-        # Knowledge Distillation
-        self.kd_training = False
-        self.teacher_ckpt = ''
-        self.teacher_model = 'smp'
-        self.teacher_encoder = None
-        self.teacher_decoder = None
-        self.kd_loss_type = 'kl_div'
-        self.kd_loss_coefficient = 1.0
-        self.kd_temperature = 4.0
 
         # Slim Size Multipliers
         self.slimmable_training = False
