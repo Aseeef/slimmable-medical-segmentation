@@ -113,7 +113,13 @@ class BaseConfig:
         self.kd_temperature = 4.0
 
         # Slim Size Multipliers
+        self.slimmable_training = False
+        self.nonuniform = False
+        self.num_sample_training = 2
         self.slim_width_mult_list = None
+
+        # The trainer to use
+        self.trainer = 'segtrainer'
 
     def init_dependent_config(self):
         assert len(self.metrics) > 0
@@ -130,6 +136,6 @@ class BaseConfig:
         if self.crop_w is None:
             self.crop_w = self.crop_size
 
-        if self.dataset == 'polyp':
+        if self.dataset == 'polyp' or self.dataset == 'larynx_polyp':
             self.num_class = 2 if self.num_class == -1 else self.num_class
             self.num_channel = 3 if self.num_channel is None else self.num_channel
