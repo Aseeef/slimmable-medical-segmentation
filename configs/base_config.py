@@ -19,7 +19,6 @@ class BaseConfig:
         self.decoder = None
         self.encoder_weights = 'imagenet'
         self.base_channel = None
-        self.is_slimmable = False            # change here
 
         # Training
         self.total_epoch = 200

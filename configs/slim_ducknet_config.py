@@ -21,7 +21,6 @@ class SlimDuckNetConfig(BaseConfig):
         # Model
         self.model = 'slimmableducknet'
         self.base_channel = 34
-        self.is_slimmable = True
 
         # Training
         self.total_epoch = 600
