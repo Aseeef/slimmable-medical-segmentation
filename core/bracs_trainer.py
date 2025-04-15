@@ -103,7 +103,7 @@ class BracsTrainer(SegTrainer):
 
         return
 
-    @override @torch.no_grad()
+    @override #torch.no_grad()
     def validate(self, config, loader, val_best=False):
         pbar = tqdm(loader) if self.main_rank else loader
         for (images, masks) in pbar:

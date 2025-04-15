@@ -99,7 +99,6 @@ class BaseTrainer:
                     self.best_score = val_score
                     if config.save_ckpt:
                         self.save_ckpt(config, save_best=True) 
-
             if self.main_rank and config.save_ckpt:
                 # Save last model    
                 self.save_ckpt(config)
@@ -170,7 +169,7 @@ class BaseTrainer:
             save_name = 'best.pth' if save_best else 'last.pth'
         save_path = f'{config.save_dir}/{save_name}'
         state_dict = self.ema_model.ema.state_dict() if save_best else de_parallel(self.model).state_dict()
-
+        print('saving ckpt')
         torch.save({
             'cur_epoch': self.cur_epoch,
             'best_score': self.best_score,
