@@ -54,7 +54,7 @@ class SlimDuckNetConfig(BaseConfig):
         self.affine_scale = (0.5, 1.5)
 
         # Slimmable Networks
-        self.slimmable_training_type = SlimmableTrainingType.S_NET
+        self.slimmable_training_type = SlimmableTrainingType.S_NET.value
         # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
         self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
         self.trainer = 'slimmablesegtrainer'

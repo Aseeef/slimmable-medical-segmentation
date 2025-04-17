@@ -5,12 +5,12 @@ from .config_registry import register_config
 
 
 @register_config
-class SlimDuckNetConfig(BaseConfig):
+class USSlimDuckNetConfig(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/slimmable_ducknet_34'
+        self.save_dir = 'save/us_ducknet_34'
 
         # Dataset
         self.dataset = 'polyp'
@@ -54,7 +54,7 @@ class SlimDuckNetConfig(BaseConfig):
         self.affine_scale = (0.5, 1.5)
 
         # Slimmable Networks
-        self.slimmable_training_type = SlimmableTrainingType.US_NET
+        self.slimmable_training_type = SlimmableTrainingType.US_NET.value
         # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
         self.slim_width_mult_list = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
         self.slim_width_range = [0.2, 1]

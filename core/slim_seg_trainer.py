@@ -22,8 +22,7 @@ class SlimmableSegTrainer(SegTrainer):
 
     @override
     def train_one_epoch(self, config):
-        assert isinstance(config.slimmable_training_type, SlimmableTrainingType)
-        if config.slimmable_training_type == SlimmableTrainingType.NONE:
+        if config.slimmable_training_type == SlimmableTrainingType.NONE.value:
             return super().train_one_epoch(config)
 
         self.model.train()
@@ -68,7 +67,7 @@ class SlimmableSegTrainer(SegTrainer):
 
             # NOTE: Many of my comments here are copied directly from the slim-net and us-net papers
             else:
-                if config.slimmable_training_type == SlimmableTrainingType.S_NET:
+                if config.slimmable_training_type == SlimmableTrainingType.S_NET.value:
                     with amp.autocast(enabled=config.amp_training):
                         widths = sorted(config.slim_width_mult_list, reverse=True)
                         # train from highest to lowest
@@ -86,14 +85,14 @@ class SlimmableSegTrainer(SegTrainer):
                             if config.use_tb and self.main_rank:
                                 self.writer.add_scalar(f'train/loss{w}', loss_w.detach(), self.train_itrs)
 
-                elif config.slimmable_training_type == SlimmableTrainingType.US_NET:
+                elif config.slimmable_training_type == SlimmableTrainingType.US_NET.value:
                     assert len(config.slim_width_range) == 2, \
                         "US-Net requires 2 widths, the min-width and the max-width inside slim_width_range."
-                    assert config.slim_width_range[0] > config.slim_width_range[1], \
+                    assert config.slim_width_range[0] < config.slim_width_range[1], \
                         "slim_width_range[0] must be less than slim_width_range[1]."
 
-                    min_width = slim_width_range[0]
-                    max_width = slim_width_range[1]
+                    min_width = config.slim_width_range[0]
+                    max_width = config.slim_width_range[1]
 
                     # always train smallest + largest widths as per the sandwich rule (see paper)
                     widths_train = [max_width, min_width]
@@ -222,7 +221,7 @@ class SlimmableSegTrainer(SegTrainer):
         :param config:
         :return:
         """
-        if config.slimmable_training_type == SlimmableTrainingType.US_NET:
+        if config.slimmable_training_type == SlimmableTrainingType.US_NET.value:
             self.model.train()  # allows BN statistics to accumulate
             self.model.apply(bn_calibration_init)
             with torch.no_grad():  # Avoids gradient buildup
@@ -238,7 +237,7 @@ class SlimmableSegTrainer(SegTrainer):
             self.is_calibrated = True
 
     def predict(self, config, running_width=None):
-        if not self.is_calibrated and config.slimmable_training_type == SlimmableTrainingType.US_NET:
+        if not self.is_calibrated and config.slimmable_training_type == SlimmableTrainingType.US_NET.value:
             self.calibrate_bn(config)
         if running_width is None:
             running_width = max(config.slim_width_mult_list)

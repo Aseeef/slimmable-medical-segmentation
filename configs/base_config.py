@@ -107,7 +107,7 @@ class BaseConfig:
         self.main_rank = self.local_rank in [-1, 0]
 
         # Slimmable Neural Networks Stuff
-        self.slimmable_training_type = SlimmableTrainingType.NONE
+        self.slimmable_training_type = SlimmableTrainingType.NONE.value
         self.inplace_distillation = False
         self.kd_loss_type = 'kl_div'
         self.kd_loss_coefficient = 1.0
@@ -115,6 +115,7 @@ class BaseConfig:
         # the number of BATCHES to use for calibration (not the total number of training items)
         self.bn_calibration_batch_size = 3
         self.slim_width_mult_list = None
+        self.slim_width_range = None
         self.us_num_training_samples = None
 
         # The trainer to use

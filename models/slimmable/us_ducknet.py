@@ -16,31 +16,31 @@ from models.model_registry import register_model, slimmable_models
 
 @register_model(slimmable_models)
 class USDuckNet(nn.Module):
-    def __init__(self, width_mult_list: List[float], num_class=1, n_channel=3, base_channel=34, act_type='relu'):
+    def __init__(self, slim_width_mult_list: List[float], num_class=1, n_channel=3, base_channel=34, act_type='relu'):
         super().__init__()
 
         self.down_stage1 = USDownsampleBlock(n_channel, base_channel * 2, act_type, fuse_channels=base_channel,
-                                             width_mult_list=width_mult_list)
+                                             width_mult_list=slim_width_mult_list)
         self.down_stage2 = USDownsampleBlock(base_channel * 2, base_channel * 4, act_type,
-                                             width_mult_list=width_mult_list)
+                                             width_mult_list=slim_width_mult_list)
         self.down_stage3 = USDownsampleBlock(base_channel * 4, base_channel * 8, act_type,
-                                             width_mult_list=width_mult_list)
+                                             width_mult_list=slim_width_mult_list)
         self.down_stage4 = USDownsampleBlock(base_channel * 8, base_channel * 16, act_type,
-                                             width_mult_list=width_mult_list)
+                                             width_mult_list=slim_width_mult_list)
         self.down_stage5 = USDownsampleBlock(base_channel * 16, base_channel * 32, act_type,
-                                             width_mult_list=width_mult_list)
+                                             width_mult_list=slim_width_mult_list)
         self.mid_stage = nn.Sequential(
-            USResidualBlock(base_channel * 32, base_channel * 32, act_type, width_mult_list=width_mult_list),
-            USResidualBlock(base_channel * 32, base_channel * 32, act_type, width_mult_list=width_mult_list),
-            USResidualBlock(base_channel * 32, base_channel * 16, act_type, width_mult_list=width_mult_list),
-            USResidualBlock(base_channel * 16, base_channel * 16, act_type, width_mult_list=width_mult_list),
+            USResidualBlock(base_channel * 32, base_channel * 32, act_type, width_mult_list=slim_width_mult_list),
+            USResidualBlock(base_channel * 32, base_channel * 32, act_type, width_mult_list=slim_width_mult_list),
+            USResidualBlock(base_channel * 32, base_channel * 16, act_type, width_mult_list=slim_width_mult_list),
+            USResidualBlock(base_channel * 16, base_channel * 16, act_type, width_mult_list=slim_width_mult_list),
         )
 
-        self.up_stage5 = USUpsampleBlock(base_channel * 16, base_channel * 8, act_type, width_mult_list=width_mult_list)
-        self.up_stage4 = USUpsampleBlock(base_channel * 8, base_channel * 4, act_type, width_mult_list=width_mult_list)
-        self.up_stage3 = USUpsampleBlock(base_channel * 4, base_channel * 2, act_type, width_mult_list=width_mult_list)
-        self.up_stage2 = USUpsampleBlock(base_channel * 2, base_channel, act_type, width_mult_list=width_mult_list)
-        self.up_stage1 = USUpsampleBlock(base_channel, base_channel, act_type, width_mult_list=width_mult_list)
+        self.up_stage5 = USUpsampleBlock(base_channel * 16, base_channel * 8, act_type, width_mult_list=slim_width_mult_list)
+        self.up_stage4 = USUpsampleBlock(base_channel * 8, base_channel * 4, act_type, width_mult_list=slim_width_mult_list)
+        self.up_stage3 = USUpsampleBlock(base_channel * 4, base_channel * 2, act_type, width_mult_list=slim_width_mult_list)
+        self.up_stage2 = USUpsampleBlock(base_channel * 2, base_channel, act_type, width_mult_list=slim_width_mult_list)
+        self.up_stage1 = USUpsampleBlock(base_channel, base_channel, act_type, width_mult_list=slim_width_mult_list)
         self.seg_head = us_conv1x1(base_channel, num_class)
 
     def forward(self, x):

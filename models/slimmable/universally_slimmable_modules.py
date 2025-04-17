@@ -50,7 +50,7 @@ class USDWConvBNAct(nn.Sequential):
         super().__init__(
             USConv2d(in_channels, out_channels, kernel_size, stride, padding,
                      dilation=dilation, groups=in_channels, bias=False),
-            USBatchNorm2d(out_channels, _, width_mult_list=width_mult_list),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
@@ -62,7 +62,7 @@ class USPWConvBNAct(nn.Sequential):
                  width_mult_list: list[float] = None, **kwargs):
         super().__init__(
             USConv2d(in_channels, out_channels, 1, bias=bias),
-            USBatchNorm2d(out_channels, _, width_mult_list=width_mult_list),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
@@ -83,7 +83,7 @@ class USConvBNAct(nn.Sequential):
         super().__init__(
             USConv2d(in_channels, out_channels, kernel_size, stride, padding,
                      dilation, groups, bias),
-            USBatchNorm2d(out_channels, _, width_mult_list=width_mult_list),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
@@ -105,7 +105,7 @@ class DeConvBNAct(nn.Module):
                               kernel_size=kernel_size,
                               stride=scale_factor, padding=padding,
                               output_padding=output_padding),
-            USBatchNorm2d(out_channels, _, width_mult_list=width_mult_list),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
