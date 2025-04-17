@@ -23,20 +23,20 @@ class BaseConfig:
         # Training
         self.total_epoch = 200
         self.base_lr = 0.01
-        self.train_bs = 16      # For each GPU
+        self.train_bs = 20      # For each GPU
         self.use_aux = False
         self.aux_coef = None
 
         # Validating
         self.metrics = ['dice'] # The first one will be used as the main metric
-        self.val_bs = 16        # For each GPU
+        self.val_bs = 1        # For each GPU
         self.begin_val_epoch = 0    # Epoch to start validation
         self.val_interval = 1   # Epoch interval between validation
         self.val_img_stride = 1
 
         # Testing
         self.is_testing = False
-        self.test_bs = 16
+        self.test_bs = 20
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None
@@ -64,11 +64,10 @@ class BaseConfig:
         self.save_dir = 'save'
         self.use_tb = True          # tensorboard
         self.tb_log_dir = None
-        self.ckpt_name = None
         self.logger_name = None
 
         # Training setting
-        self.amp_training = True
+        self.amp_training = True  # increases training speed by 7% with no noticeable performance hit
         self.resume_training = True
         self.load_ckpt = True
         self.load_ckpt_path = None

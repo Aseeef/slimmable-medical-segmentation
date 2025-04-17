@@ -50,6 +50,8 @@ class DWConvBNAct(nn.Sequential):
             padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
         elif isinstance(kernel_size, int):    
             padding = (kernel_size - 1) // 2 * dilation
+        else:
+            raise ValueError('kernel_size should be int or list/tuple of ints')
 
         super().__init__(
             nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, 
@@ -77,6 +79,8 @@ class ConvBNAct(nn.Sequential):
             padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
         elif isinstance(kernel_size, int):    
             padding = (kernel_size - 1) // 2 * dilation
+        else:
+            raise ValueError('kernel_size should be int or list/tuple of ints')
 
         super().__init__(
             nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias),
