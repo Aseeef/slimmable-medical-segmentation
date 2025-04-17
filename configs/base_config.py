@@ -1,5 +1,11 @@
 import os
+from enum import Enum
 
+
+class SlimmableTrainingType(Enum):
+    NONE = "none"
+    S_NET = "s-net"
+    US_NET = "us-net"
 
 class BaseConfig:
 
@@ -100,11 +106,15 @@ class BaseConfig:
         self.local_rank = int(os.getenv('LOCAL_RANK', -1))
         self.main_rank = self.local_rank in [-1, 0]
 
-        # Slim Size Multipliers
-        self.slimmable_training = False
-        self.nonuniform = False
-        self.num_sample_training = 2
+        # Slimmable Neural Networks Stuff
+        self.slimmable_training_type = SlimmableTrainingType.NONE
+        self.inplace_distillation = False
+        self.kd_loss_type = 'kl_div'
+        self.kd_loss_coefficient = 1.0
+        self.kd_temperature = 1.0
+        self.bn_calibration_batch_size = 25
         self.slim_width_mult_list = None
+        self.us_num_training_samples = None
 
         # The trainer to use
         self.trainer = 'segtrainer'

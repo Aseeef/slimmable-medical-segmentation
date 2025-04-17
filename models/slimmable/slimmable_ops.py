@@ -462,16 +462,18 @@ def pop_channels(autoslim_channels: List[List[int]]):
 def bn_calibration_init(m: nn.Module, cumulative_bn_stats: bool = False):
     """
     Initializes BatchNorm layers for calibration by resetting and setting mode.
+    This is used in the calibration of Universally Slimmable Networks (only) since the
+    original SSNs maintain independent batch norms for each width multiplier.
 
     Args:
         m (nn.Module): The module to initialize.
         cumulative_bn_stats (bool): Whether to use cumulative moving average. Default is False.
     """
     if getattr(m, 'track_running_stats', False):
-        # reset all values for post-statistics
+        # Reset all values for post-statistics
         m.reset_running_stats()
-        # set bn in training mode to update post-statistics
+        # Set bn in training mode to update post-statistics
         m.training = True
-        # if use cumulative moving average
+        # If using cumulative moving average (i.e., exact averaging per Eq. 8)
         if cumulative_bn_stats:
             m.momentum = None
