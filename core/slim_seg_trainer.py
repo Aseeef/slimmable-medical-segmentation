@@ -111,10 +111,11 @@ class SlimmableSegTrainer(SegTrainer):
 
         # if this is the main process (main_rank) - bc we are doing distributed training
         if self.main_rank:
+            log_print = ""
             if val_best:
-                log_print = f"\n\n---- Finished training {config.total_epoch} epochs ----"
+                log_print += f"\n\n----- Finished training {config.total_epoch} epochs -----"
             else:
-                log_print = f"\n\n---- Trained {self.cur_epoch} epochs ----"
+                log_print += f"\n\n----- Trained {self.cur_epoch} epochs -----"
 
             for w in config.slim_width_mult_list:
                 log_print += f"\n[Width: {w:.3f}] "
@@ -124,13 +125,14 @@ class SlimmableSegTrainer(SegTrainer):
                         log_print += f"Final m{config.metrics[i]}={width_scores[w][i].mean():.4f} | "
                     else:
                         log_print += f"Current m{config.metrics[i]}={width_scores[w][i].mean():.4f} "
+                        # best_score is the first metric of the largest width
                         if i == 0 and w == max_width:
                             log_print += f"[Best m{config.metrics[0]}={self.best_score:.4f}] "
                         log_print += f"| "
 
                     # if this is the last iteration trim the "| "
                     if i == len(config.metrics) - 1:
-                        log_print += log_print[:-2]
+                        log_print = log_print[:-2]
 
                     if config.use_tb and self.cur_epoch < config.total_epoch:
                         self.writer.add_scalar(f'val/{w}/m{config.metrics[i]}', width_scores[w][i].mean().item(), self.cur_epoch + 1)
@@ -139,6 +141,5 @@ class SlimmableSegTrainer(SegTrainer):
                                 self.writer.add_scalar(f'val/{w}/IoU_cls{j:02f}', width_scores[w][i][j].item(), self.cur_epoch + 1)
 
             self.logger.info(log_print)
-            log_print = ""
 
         return width_scores[max_width][0].mean()
