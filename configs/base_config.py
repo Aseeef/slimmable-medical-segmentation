@@ -112,7 +112,8 @@ class BaseConfig:
         self.kd_loss_type = 'kl_div'
         self.kd_loss_coefficient = 1.0
         self.kd_temperature = 1.0
-        self.bn_calibration_batch_size = 25
+        # the number of BATCHES to use for calibration (not the total number of training items)
+        self.bn_calibration_batch_size = 3
         self.slim_width_mult_list = None
         self.us_num_training_samples = None
 

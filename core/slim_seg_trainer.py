@@ -14,6 +14,9 @@ from utils import sampler_set_epoch
 
 @register_trainer
 class SlimmableSegTrainer(SegTrainer):
+
+    is_calibrated: bool = False
+
     def __init__(self, config):
         super().__init__(config)
 
@@ -211,3 +214,38 @@ class SlimmableSegTrainer(SegTrainer):
             self.logger.info(log_print)
 
         return width_scores[max_width][0].mean()
+
+    def calibrate_bn(self, config):
+        """
+        In order to make predictions for any width, we need to calibrate the batch norm statistic for that width first
+        before we can use it to make predictions. This function does that.
+        :param config:
+        :return:
+        """
+        if config.slimmable_training_type == SlimmableTrainingType.US_NET:
+            self.model.train()  # allows BN statistics to accumulate
+            self.model.apply(bn_calibration_init)
+            with torch.no_grad():  # Avoids gradient buildup
+                i = 0
+                for w in config.slim_width_mult_list:
+                    self.model.apply(lambda m: setattr(m, 'width_mult', w))
+                    for images, _ in self.train_loader:
+                        self.model(images.to(self.device, dtype=torch.float32))
+                        i += 1
+                        if i >= config.bn_calibration_batch_size:
+                            break
+            self.model.eval()
+            self.is_calibrated = True
+
+    def predict(self, config, running_width=None):
+        if not self.is_calibrated and config.slimmable_training_type == SlimmableTrainingType.US_NET:
+            self.calibrate_bn(config)
+        if running_width is None:
+            running_width = max(config.slim_width_mult_list)
+        if running_width not in config.slim_width_mult_list:
+            raise ValueError(f"Invalid running_width: {running_width}. Must be one of {config.slim_width_mult_list}.")
+        if len(self.train_loader) < config.bn_calibration_batch_size:
+            self.logger.warning(f"Running width {running_width} is being used for prediction,"
+                                f" but the training loader only has {len(self.test_loader)} batches. ")
+        self.model.apply(lambda m: setattr(m, 'width_mult', running_width))
+        super().predict(config)
