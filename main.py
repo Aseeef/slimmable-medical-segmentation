@@ -34,14 +34,10 @@ if __name__ == '__main__':
     config = configs.get_config(selected_config)()
     config.init_dependent_config()
 
-<<<<<<< HEAD
     # instantiate trainer
-    trainer = SegTrainer(config)
     # instantiate inference runner
     inference_runner = SlimmableSegInferenceRunner(config)
-=======
     trainer = get_trainer(config)
->>>>>>> origin/main
 
     # run scripts
     if config.is_testing:
