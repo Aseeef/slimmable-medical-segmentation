@@ -83,6 +83,31 @@ class SegTrainer(BaseTrainer):
     @torch.no_grad()
     def validate(self, config, loader, val_best=False):
         pbar = tqdm(loader) if self.main_rank else loader
+        scores = self.val_compute_metrics(config, pbar)
+
+        if self.main_rank:
+            for i in range(len(config.metrics)):
+                if val_best:
+                    self.logger.info(f'\n\nTrain {config.total_epoch} epochs finished.' +
+                                     f'\n\nBest m{config.metrics[i]} is: {scores[i].mean():.4f}\n')
+                else:
+                    infos = f' Epoch {self.cur_epoch} m{config.metrics[i]}: {scores[i].mean():.4f} \t| ' + \
+                                     f'best m{config.metrics[0]} so far: {self.best_score:.4f}\n'
+                    if len(config.metrics) > 1 and i != len(config.metrics) - 1:
+                        infos = infos[:-1]
+                    self.logger.info(infos)
+
+                if config.use_tb and self.cur_epoch < config.total_epoch:
+                    self.writer.add_scalar(f'val/m{config.metrics[i]}', scores[i].mean().item(), self.cur_epoch+1)
+                    if config.metrics[i] == 'iou':
+                        for j in range(config.num_class):
+                            self.writer.add_scalar(f'val/IoU_cls{j:02f}', scores[i][j].item(), self.cur_epoch+1)
+        for metric in self.metrics:
+            metric.reset()
+
+        return scores[0].mean()
+
+    def val_compute_metrics(self, config, pbar):
         for (images, masks) in pbar:
             images = images.to(self.device, dtype=torch.float32)
 
@@ -108,28 +133,8 @@ class SegTrainer(BaseTrainer):
                 pbar.set_description(('%s'*1) % (f'Validating:{" "*4}|',))
 
         scores = [metric.compute() for metric in self.metrics]
-        score = scores[0].mean()
 
-        if self.main_rank:
-            for i in range(len(config.metrics)):
-                if val_best:
-                    self.logger.info(f'\n\nTrain {config.total_epoch} epochs finished.' +
-                                     f'\n\nBest m{config.metrics[i]} is: {scores[i].mean():.4f}\n')
-                else:
-                    infos = f' Epoch{self.cur_epoch} m{config.metrics[i]}: {scores[i].mean():.4f} \t| ' + \
-                                     f'best m{config.metrics[0]} so far: {self.best_score:.4f}\n'
-                    if len(config.metrics) > 1 and i != len(config.metrics) - 1:
-                        infos = infos[:-1]
-                    self.logger.info(infos)
-
-                if config.use_tb and self.cur_epoch < config.total_epoch:
-                    self.writer.add_scalar(f'val/m{config.metrics[i]}', scores[i].mean().item(), self.cur_epoch+1)
-                    if config.metrics[i] == 'iou':
-                        for j in range(config.num_class):
-                            self.writer.add_scalar(f'val/IoU_cls{j:02f}', scores[i][j].item(), self.cur_epoch+1)
-        for metric in self.metrics:
-            metric.reset()
-        return score
+        return scores
 
     @torch.no_grad()
     def predict(self, config):
