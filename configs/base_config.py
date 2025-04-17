@@ -23,20 +23,22 @@ class BaseConfig:
         # Training
         self.total_epoch = 200
         self.base_lr = 0.01
-        self.train_bs = 16      # For each GPU
+        self.train_bs = 20      # For each GPU
         self.use_aux = False
         self.aux_coef = None
 
         # Validating
         self.metrics = ['dice'] # The first one will be used as the main metric
-        self.val_bs = 16        # For each GPU
+        self.val_bs = 1        # For each GPU
         self.begin_val_epoch = 0    # Epoch to start validation
         self.val_interval = 1   # Epoch interval between validation
         self.val_img_stride = 1
 
         # Testing
+
+
         self.is_testing = True
-        self.test_bs = 16
+        self.test_bs = 20
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None
@@ -64,11 +66,10 @@ class BaseConfig:
         self.save_dir = 'save'
         self.use_tb = True          # tensorboard
         self.tb_log_dir = None
-        self.ckpt_name = None
         self.logger_name = None
 
         # Training setting
-        self.amp_training = False
+        self.amp_training = True  # increases training speed by 7% with no noticeable performance hit
         self.resume_training = True
         self.load_ckpt = True
         self.load_ckpt_path = None
@@ -100,16 +101,6 @@ class BaseConfig:
         self.destroy_ddp_process = True
         self.local_rank = int(os.getenv('LOCAL_RANK', -1))
         self.main_rank = self.local_rank in [-1, 0]
-
-        # Knowledge Distillation
-        self.kd_training = False
-        self.teacher_ckpt = ''
-        self.teacher_model = 'smp'
-        self.teacher_encoder = None
-        self.teacher_decoder = None
-        self.kd_loss_type = 'kl_div'
-        self.kd_loss_coefficient = 1.0
-        self.kd_temperature = 4.0
 
         # Slim Size Multipliers
         self.slimmable_training = False

@@ -24,8 +24,9 @@ class SlimDuckNetConfig_Inference(BaseConfig):
         self.base_channel = 34
 
         # Training
+        self.amp_training = True  # increases training speed by 7% in my tests
         self.total_epoch = 600
-        self.train_bs = 16  # this is PER GPU
+        self.train_bs = 20  # this is PER GPU
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
@@ -53,6 +54,8 @@ class SlimDuckNetConfig_Inference(BaseConfig):
         self.affine_translate = (-0.125, 0.125)
         self.affine_scale = (0.5, 1.5)
 
-        # Slimmable
+        # Slimmable Networks
+
+        # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
         self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
         self.trainer = 'slimmablesegtrainer'
