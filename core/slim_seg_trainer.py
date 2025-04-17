@@ -84,13 +84,13 @@ class SlimmableSegTrainer(SegTrainer):
                                 self.writer.add_scalar(f'train/loss{w}', loss_w.detach(), self.train_itrs)
 
                 elif config.slimmable_training_type == SlimmableTrainingType.US_NET:
-                    assert len(config.slim_width_mult_list) == 2, \
-                        "US-Net requires 2 widths, the min-width and the max-width."
-                    assert config.slim_width_mult_list[0] != config.slim_width_mult_list[1], \
-                        "US-Net requires 2 DIFFERENT widths, the min-width and the max-width."
+                    assert len(config.slim_width_range) == 2, \
+                        "US-Net requires 2 widths, the min-width and the max-width inside slim_width_range."
+                    assert config.slim_width_range[0] > config.slim_width_range[1], \
+                        "slim_width_range[0] must be less than slim_width_range[1]."
 
-                    min_width = config.slim_width_mult_list[0] if config.slim_width_mult_list[0] < config.slim_width_mult_list[1] else config.slim_width_mult_list[1]
-                    max_width = config.slim_width_mult_list[0] if config.slim_width_mult_list[0] > config.slim_width_mult_list[1] else config.slim_width_mult_list[1]
+                    min_width = slim_width_range[0]
+                    max_width = slim_width_range[1]
 
                     # always train smallest + largest widths as per the sandwich rule (see paper)
                     widths_train = [max_width, min_width]
@@ -165,20 +165,6 @@ class SlimmableSegTrainer(SegTrainer):
     @torch.no_grad()
     def validate(self, config, loader, val_best=False):
         pbar = tqdm(loader) if self.main_rank else loader
-
-        # Calculate BN post statistics for US nets by passing a small
-        # batch of the evaluation loader
-        if config.slimmable_training_type == SlimmableTrainingType.US_NET:
-            self.ema_model.train() # allows BN statistics to accumulate
-            self.ema_model.apply(bn_calibration_init)
-            with torch.no_grad():  # Avoids gradient buildup
-                i = 0
-                for images, _ in loader:
-                    self.ema_model(images.to(self.device, dtype=torch.float32))
-                    i += 1
-                    if i >= config.bn_calibration_batch_size:
-                        break
-            self.ema_model.eval()
 
         max_width = max(config.slim_width_mult_list)
         width_scores = {}
