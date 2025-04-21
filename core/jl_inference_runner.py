@@ -12,35 +12,36 @@ from torch.cuda import amp
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+import os
+import torch
+import numpy as np
+from PIL import Image
+from tqdm import tqdm
+from torch.cuda import amp
+import torch.nn.functional as F
 
-class SlimmableSegInferenceRunner:
+from .base_trainer import BaseTrainer
+from utils import (get_seg_metrics, sampler_set_epoch, get_colormap)
+from .trainer_registry import register_trainer
+
+
+
+
+@register_trainer
+class SlimmableSegInferenceRunner(BaseTrainer):
     """
     Standalone inference runner for slimmable segmentation models.
     Iterates over width multipliers to perform forward passes and collect predictions.
     """
 
-    def __init__(self, model, val_loader: DataLoader, device: torch.device,
-                 width_mult_list, amp_enabled=False, ddp=False, current_epoch=0, main_rank=True):
-        """
-        Args:
-            model: The slimmable model with 'width_mult' attribute per layer/module.
-            val_loader (DataLoader): Validation dataloader.
-            device (torch.device): CUDA or CPU device.
-            width_mult_list (list): List of width multipliers to evaluate.
-            amp_enabled (bool): Whether to use mixed precision (torch.cuda.amp).
-            ddp (bool): DistributedDataParallel flag.
-            current_epoch (int): Current epoch number for reproducibility.
-            main_rank (bool): Whether this is the main process (for tqdm display).
-        """
-        self.model = model
-        self.val_loader = val_loader
-        self.device = device
-        self.width_mult_list = width_mult_list
-        self.amp_enabled = amp_enabled
-        self.ddp = ddp
-        self.current_epoch = current_epoch
-        self.main_rank = main_rank
+    def __init__(self, config):
+        super().__init__(config)
+        if config.is_testing:
+            self.colormap = torch.tensor(get_colormap(config)).to(self.device)
+        else:
+            self.metrics = [get_seg_metrics(config, metric_name).to(self.device) for metric_name in config.metrics]
 
+            
     @torch.no_grad()
     def run(self):
         """

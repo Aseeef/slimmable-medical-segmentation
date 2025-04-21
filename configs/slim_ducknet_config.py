@@ -5,7 +5,6 @@ from .config_registry import register_config
 
 
 @register_config
-
 class SlimDuckNetConfig_Inference(BaseConfig):
 
     def __init__(self,):
@@ -18,6 +17,9 @@ class SlimDuckNetConfig_Inference(BaseConfig):
         self.subset = 'kvasir'
         self.data_root = os.path.join('PolypDataset', 'Kvasir-SEG')
         self.use_test_set = True
+
+        self.is_testing = True
+        self.test_data_folder = os.path.join('PolypDataset', 'Kvasir-SEG', 'test')  
 
         # Model
         self.model = 'slimmableducknet'
@@ -58,4 +60,4 @@ class SlimDuckNetConfig_Inference(BaseConfig):
 
         # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
         self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
-        self.trainer = 'slimmablesegtrainer'
+        self.trainer = 'slimmableseginferencerunner'
