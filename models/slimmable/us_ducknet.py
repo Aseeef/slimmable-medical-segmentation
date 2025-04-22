@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from models.slimmable.slimmable_ops import USBatchNorm2d
 from .universally_slimmable_modules import us_conv1x1, USConvBNAct, Activation
 from models.model_registry import register_model, slimmable_models
+from models.slimmable.slimmable_ops import USConv2d
 
 
 @register_model(slimmable_models)
@@ -41,7 +42,11 @@ class USDuckNet(nn.Module):
         self.up_stage3 = USUpsampleBlock(base_channel * 4, base_channel * 2, act_type, width_mult_list=slim_width_mult_list)
         self.up_stage2 = USUpsampleBlock(base_channel * 2, base_channel, act_type, width_mult_list=slim_width_mult_list)
         self.up_stage1 = USUpsampleBlock(base_channel, base_channel, act_type, width_mult_list=slim_width_mult_list)
-        self.seg_head = us_conv1x1(base_channel, num_class)
+        #self.seg_head = us_conv1x1(base_channel, num_class)
+
+        # 1×1 conv; output dim fixed
+        self.seg_head = USConv2d(in_channels=base_channel, out_channels=num_class, kernel_size=1, 
+                                padding=0, bias=True, us=(True, False))                                  # only slim the INPUT side
 
     def forward(self, x):
         x1, x1_skip, x = self.down_stage1(x)
@@ -131,7 +136,7 @@ class USDUCK(nn.Module):
         super().__init__()
         if is_first_block:
             self.in_bn = nn.Sequential(
-                nn.BatchNorm2d(in_channels),  # normal BN layer 
+                nn.BatchNorm2d(in_channels),  # normal/standard BN layer 
                 Activation(act_type))
         else: 
             self.in_bn = nn.Sequential(
