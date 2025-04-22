@@ -1,5 +1,11 @@
 import os
+from enum import Enum
 
+
+class SlimmableTrainingType(Enum):
+    NONE = "none"
+    S_NET = "s-net"
+    US_NET = "us-net"
 
 class BaseConfig:
 
@@ -19,25 +25,24 @@ class BaseConfig:
         self.decoder = None
         self.encoder_weights = 'imagenet'
         self.base_channel = None
-        self.is_slimmable = False            # change here
 
         # Training
         self.total_epoch = 200
         self.base_lr = 0.01
-        self.train_bs = 16      # For each GPU
+        self.train_bs = 20      # For each GPU
         self.use_aux = False
         self.aux_coef = None
 
         # Validating
         self.metrics = ['dice'] # The first one will be used as the main metric
-        self.val_bs = 16        # For each GPU
+        self.val_bs = 1        # For each GPU
         self.begin_val_epoch = 0    # Epoch to start validation
         self.val_interval = 1   # Epoch interval between validation
         self.val_img_stride = 1
 
         # Testing
         self.is_testing = False
-        self.test_bs = 16
+        self.test_bs = 20
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None
@@ -65,11 +70,10 @@ class BaseConfig:
         self.save_dir = 'save'
         self.use_tb = True          # tensorboard
         self.tb_log_dir = None
-        self.ckpt_name = None
         self.logger_name = None
 
         # Training setting
-        self.amp_training = False
+        self.amp_training = True  # increases training speed by 7% with no noticeable performance hit
         self.resume_training = True
         self.load_ckpt = True
         self.load_ckpt_path = None
@@ -102,18 +106,20 @@ class BaseConfig:
         self.local_rank = int(os.getenv('LOCAL_RANK', -1))
         self.main_rank = self.local_rank in [-1, 0]
 
-        # Knowledge Distillation
-        self.kd_training = False
-        self.teacher_ckpt = ''
-        self.teacher_model = 'smp'
-        self.teacher_encoder = None
-        self.teacher_decoder = None
+        # Slimmable Neural Networks Stuff
+        self.slimmable_training_type = SlimmableTrainingType.NONE.value
+        self.inplace_distillation = False
         self.kd_loss_type = 'kl_div'
         self.kd_loss_coefficient = 1.0
-        self.kd_temperature = 4.0
-
-        # Slim Size Multipliers
+        self.kd_temperature = 1.0
+        # the number of BATCHES to use for calibration (not the total number of training items)
+        self.bn_calibration_batch_size = 3
         self.slim_width_mult_list = None
+        self.slim_width_range = None
+        self.us_num_training_samples = None
+
+        # The trainer to use
+        self.trainer = 'segtrainer'
 
     def init_dependent_config(self):
         assert len(self.metrics) > 0
@@ -130,6 +136,6 @@ class BaseConfig:
         if self.crop_w is None:
             self.crop_w = self.crop_size
 
-        if self.dataset == 'polyp':
+        if self.dataset == 'polyp' or self.dataset == 'larynx_polyp':
             self.num_class = 2 if self.num_class == -1 else self.num_class
             self.num_channel = 3 if self.num_channel is None else self.num_channel

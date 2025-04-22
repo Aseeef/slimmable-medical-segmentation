@@ -1,96 +1,99 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.slimmable.slimmable_ops import USConv2d, USBatchNorm2d, USLinear, USConvTranspose2d
+from models.slimmable.slimmable_ops import USLinear, USConv2d, USBatchNorm2d, \
+    USConvTranspose2d
 
 
 # Regular convolution with kernel size 3x3
-def conv3x3(in_channels, out_channels, stride=1, bias=False):
+def us_conv3x3(in_channels: int, out_channels: int,
+               stride: int | tuple[int, int] = 1, bias=False):
     return USConv2d(in_channels, out_channels, kernel_size=3, stride=stride,
                     padding=1, bias=bias)
 
 
 # Regular convolution with kernel size 1x1, a.k.a. point-wise convolution
-def conv1x1(in_channels, out_channels, stride=1, bias=False):
+def us_conv1x1(in_channels: int, out_channels: int,
+               stride: int | tuple[int, int] = 1, bias=False):
     return USConv2d(in_channels, out_channels, kernel_size=1, stride=stride,
                     padding=0, bias=bias)
 
 
-def channel_shuffle(x, groups=2):
-    # Codes are borrowed from
-    # https://github.com/pytorch/vision/blob/main/torchvision/models/shufflenetv2.py
-    batchsize, num_channels, height, width = x.size()
-    channels_per_group = num_channels // groups
-
-    # reshape
-    x = x.view(batchsize, groups, channels_per_group, height, width)
-
-    x = torch.transpose(x, 1, 2).contiguous()
-
-    # flatten
-    x = x.view(batchsize, -1, height, width)
-
-    return x
-
-
 # Depth-wise seperable convolution with batchnorm and activation
-class DSConvBNAct(nn.Sequential):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1,
-                 dilation=1, act_type='relu', **kwargs):
+class USDSConvBNAct(nn.Sequential):
+    def __init__(self, in_channels: int, out_channels: int,
+                 kernel_size: int | tuple[int, ...], stride: int | tuple[int, int] = 1,
+                 dilation: int | tuple[int, int] = 1, act_type: str = 'relu', **kwargs):
         super().__init__(
-            DWConvBNAct(in_channels, in_channels, kernel_size, stride, dilation, act_type, **kwargs),
-            PWConvBNAct(in_channels, out_channels, act_type, **kwargs)
+            USDWConvBNAct(in_channels, in_channels, kernel_size, stride, dilation,
+                          act_type, **kwargs),
+            USPWConvBNAct(in_channels, out_channels, act_type, **kwargs)
         )
 
 
 # Depth-wise convolution -> batchnorm -> activation
-class DWConvBNAct(nn.Sequential):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1,
-                 dilation=1, act_type='relu', **kwargs):
+class USDWConvBNAct(nn.Sequential):
+    def __init__(self, in_channels: int, out_channels: int,
+                 kernel_size: int | tuple[int, ...], stride: int | tuple[int, int] = 1,
+                 dilation: int | tuple[int, int] = 1, act_type: str = 'relu',
+                 width_mult_list: list[float] = None, **kwargs):
         if isinstance(kernel_size, list) or isinstance(kernel_size, tuple):
             padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
         elif isinstance(kernel_size, int):
             padding = (kernel_size - 1) // 2 * dilation
+        else:
+            raise ValueError('kernel_size should be int or list/tuple of ints')
 
         super().__init__(
             USConv2d(in_channels, out_channels, kernel_size, stride, padding,
                      dilation=dilation, groups=in_channels, bias=False),
-            USBatchNorm2d(out_channels),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
 
 # Point-wise convolution -> batchnorm -> activation
-class PWConvBNAct(nn.Sequential):
-    def __init__(self, in_channels, out_channels, act_type='relu', bias=True, **kwargs):
+class USPWConvBNAct(nn.Sequential):
+    def __init__(self, in_channels: int, out_channels: int,
+                 act_type: str = 'relu', bias: bool = True,
+                 width_mult_list: list[float] = None, **kwargs):
         super().__init__(
             USConv2d(in_channels, out_channels, 1, bias=bias),
-            USBatchNorm2d(out_channels),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
 
 # Regular convolution -> batchnorm -> activation
-class ConvBNAct(nn.Sequential):
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, dilation=1, groups=1,
-                 bias=False, act_type='relu', **kwargs):
+class USConvBNAct(nn.Sequential):
+    def __init__(self, in_channels: int, out_channels: int,
+                 kernel_size: int | tuple[int, ...] = 3, stride: int | tuple[int, int] = 1, dilation=1,
+                 groups: int = 1, bias: bool = False, act_type: str = 'relu',
+                 width_mult_list: list[float] = None, **kwargs):
         if isinstance(kernel_size, list) or isinstance(kernel_size, tuple):
             padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
         elif isinstance(kernel_size, int):
             padding = (kernel_size - 1) // 2 * dilation
+        else:
+            raise ValueError('kernel_size should be int or list/tuple of ints')
 
         super().__init__(
-            USConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias),
-            USBatchNorm2d(out_channels),
+            USConv2d(in_channels, out_channels, kernel_size, stride, padding,
+                     dilation, groups, bias),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
 
 # Transposed /de- convolution -> batchnorm -> activation
 class DeConvBNAct(nn.Module):
-    def __init__(self, in_channels, out_channels, scale_factor=2, kernel_size=None,
-                 padding=None, act_type='relu', **kwargs):
+    def __init__(self, in_channels: int, out_channels: int,
+                 scale_factor: int = 2, kernel_size: int | tuple[int, ...] = None,
+                 padding: int | tuple[int, int] = None, act_type: str = 'relu',
+                 width_mult_list: list[float] = None, **kwargs):
         super().__init__()
         if kernel_size is None:
             kernel_size = 2 * scale_factor - 1
@@ -102,7 +105,7 @@ class DeConvBNAct(nn.Module):
                               kernel_size=kernel_size,
                               stride=scale_factor, padding=padding,
                               output_padding=output_padding),
-            USBatchNorm2d(out_channels),
+            USBatchNorm2d(out_channels, width_mult_list=width_mult_list),
             Activation(act_type, **kwargs)
         )
 
@@ -134,7 +137,9 @@ class Activation(nn.Module):
 
 
 class PyramidPoolingModule(nn.Module):
-    def __init__(self, in_channels, out_channels, act_type, pool_sizes=[1, 2, 4, 6], bias=False):
+    def __init__(self, in_channels: int, out_channels: int,
+                 act_type: str, pool_sizes: List[int] = [1, 2, 4, 6], bias: bool = False,
+                 width_mult_list: list[float] = None):
         super().__init__()
         assert len(pool_sizes) == 4, 'Length of pool size should be 4.\n'
         hid_channels = int(in_channels // 4)
@@ -142,12 +147,13 @@ class PyramidPoolingModule(nn.Module):
         self.stage2 = self._make_stage(in_channels, hid_channels, pool_sizes[1])
         self.stage3 = self._make_stage(in_channels, hid_channels, pool_sizes[2])
         self.stage4 = self._make_stage(in_channels, hid_channels, pool_sizes[3])
-        self.conv = PWConvBNAct(2 * in_channels, out_channels, act_type=act_type, bias=bias)
+        self.conv = USPWConvBNAct(2 * in_channels, out_channels, act_type=act_type,
+                                  bias=bias, width_mult_list=width_mult_list)
 
-    def _make_stage(self, in_channels, out_channels, pool_size):
+    def _make_stage(self, in_channels: int, out_channels: int, pool_size: int):
         return nn.Sequential(
             nn.AdaptiveAvgPool2d(pool_size),
-            conv1x1(in_channels, out_channels)
+            us_conv1x1(in_channels, out_channels)
         )
 
     def forward(self, x):
@@ -161,7 +167,9 @@ class PyramidPoolingModule(nn.Module):
 
 
 class ASPP(nn.Module):
-    def __init__(self, in_channels, out_channels, dilations=[1, 6, 12, 18], act_type='relu'):
+    def __init__(self, in_channels: int, out_channels: int,
+                 dilations: List[int] = [1, 6, 12, 18], act_type: str = 'relu',
+                 width_mult_list: list[float] = None):
         super().__init__()
         assert isinstance(dilations, (list, tuple))
         assert len(dilations) > 0
@@ -169,13 +177,23 @@ class ASPP(nn.Module):
 
         hid_channels = out_channels // num_branch
 
-        self.pool = nn.Sequential(nn.AdaptiveAvgPool2d(1), ConvBNAct(in_channels, hid_channels, 1, act_type=act_type))
+        self.pool = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            USConvBNAct(
+                in_channels,
+                hid_channels,
+                1,
+                act_type=act_type,
+                width_mult_list=width_mult_list
+            )
+        )
         self.dilated_convs = nn.ModuleList([
-            ConvBNAct(in_channels, hid_channels, 3, dilation=d, act_type=act_type)
+            USConvBNAct(in_channels, hid_channels, 3,
+                        dilation=d, act_type=act_type, width_mult_list=width_mult_list)
             for d in dilations
         ])
 
-        self.conv = ConvBNAct(hid_channels * num_branch, out_channels)
+        self.conv = USConvBNAct(hid_channels * num_branch, out_channels, width_mult_list=width_mult_list)
 
     def forward(self, x):
         size = x.size()[2:]
@@ -194,7 +212,7 @@ class ASPP(nn.Module):
 
 
 class SEBlock(nn.Module):
-    def __init__(self, channels, act_type, reduction_num=16):
+    def __init__(self, channels: int, act_type: str, reduction_num: int = 16):
         super().__init__()
         squeeze_channels = channels // reduction_num
         self.pool = nn.AdaptiveAvgPool2d(1)
@@ -215,8 +233,8 @@ class SEBlock(nn.Module):
 
 
 class SegHead(nn.Sequential):
-    def __init__(self, in_channels, num_class, act_type, hid_channels=128):
+    def __init__(self, in_channels, num_class, act_type, hid_channels=128, width_mult_list: list[float] | None = None):
         super().__init__(
-            ConvBNAct(in_channels, hid_channels, 3, act_type=act_type),
-            conv1x1(hid_channels, num_class)
+            USConvBNAct(in_channels, hid_channels, 3, act_type=act_type, width_mult_list=width_mult_list),
+            us_conv1x1(hid_channels, num_class)
         )

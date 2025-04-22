@@ -1,32 +1,34 @@
 import os.path
 
-from .base_config import BaseConfig, SlimmableTrainingType
+from .base_config import BaseConfig
 from .config_registry import register_config
 
 
 @register_config
-class SlimDuckNetConfig(BaseConfig):
+class BracsDuckNet34Config(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/slimmable_ducknet_34'
+        self.save_dir = 'save/bracsducknet_34'
 
         # Dataset
-        self.dataset = 'polyp'
+        self.dataset = 'larynx_seg'
         self.subset = 'kvasir'
-        self.data_root = os.path.join('PolypDataset', 'Kvasir-SEG')
+        self.data_root = r"/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/medical-segmentation-pytorch/LarynxDataset/LarynxDataset"  #os.path.join('PolypDataset', 'LarynxDataset')
+        print(f'looking for data in {self.data_root}')
+
         self.use_test_set = True
 
         # Model
-        self.model = 'slimmableducknet'
+        self.model = 'bracsducknet'
         self.base_channel = 34
+        self.num_class = 13
 
         # Training
-        self.amp_training = True  # increases training speed by 7% in my tests
-        self.total_epoch = 600
-        self.train_bs = 20  # this is PER GPU
-        self.loss_type = 'dice'
+        self.total_epoch = 602
+        self.train_bs = 4  # this is PER GPU
+        self.loss_type = 'modded_dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
 
@@ -36,10 +38,10 @@ class SlimDuckNetConfig(BaseConfig):
 
         # Training setting
         self.use_ema = False
-        self.logger_name = 'medseg_trainer'
+        self.logger_name = 'seg_head_trainer'
 
         # Augmentation
-        self.crop_size = 320
+        #self.crop_size = 320
         self.randscale = None
         self.brightness = [0.6, 1.6]
         self.contrast = 0.2
@@ -53,8 +55,5 @@ class SlimDuckNetConfig(BaseConfig):
         self.affine_translate = (-0.125, 0.125)
         self.affine_scale = (0.5, 1.5)
 
-        # Slimmable Networks
-        self.slimmable_training_type = SlimmableTrainingType.S_NET.value
-        # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
-        self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
-        self.trainer = 'slimmablesegtrainer'
+        # Trainer
+        self.trainer = 'bracstrainer'

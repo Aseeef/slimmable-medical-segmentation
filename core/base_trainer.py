@@ -135,7 +135,7 @@ class BaseTrainer:
             semi-supervised learning.'''
         raise NotImplementedError()
 
-    def validate(self, config):
+    def validate(self, config, loader, *args, **kargs):
         raise NotImplementedError()   
 
     def predict(self, config):
@@ -166,8 +166,7 @@ class BaseTrainer:
                     self.logger.info('[!] Train from scratch')
 
     def save_ckpt(self, config, save_best=False):
-        if config.ckpt_name is None:
-            save_name = 'best.pth' if save_best else 'last.pth'
+        save_name = 'best.pth' if save_best else 'last.pth'
         save_path = f'{config.save_dir}/{save_name}'
         state_dict = self.ema_model.ema.state_dict() if save_best else de_parallel(self.model).state_dict()
 

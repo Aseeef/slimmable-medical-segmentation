@@ -43,6 +43,8 @@ class SlimmableDWConvBNAct(nn.Sequential):
             padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
         elif isinstance(kernel_size, int):
             padding = (kernel_size - 1) // 2 * dilation
+        else:
+            raise ValueError('kernel_size should be int or list/tuple of ints')
 
         super().__init__(
             SlimmableConv2d(width_mult_list, in_channels_list, out_channels_list, kernel_size, stride, padding,
@@ -72,6 +74,8 @@ class SlimmableConvBNAct(nn.Sequential):
             padding = ((kernel_size[0] - 1) // 2 * dilation, (kernel_size[1] - 1) // 2 * dilation)
         elif isinstance(kernel_size, int):
             padding = (kernel_size - 1) // 2 * dilation
+        else:
+            raise ValueError('kernel_size should be int or list/tuple of ints')
 
         super().__init__(
             SlimmableConv2d(width_mult_list, in_channels_list, out_channels_list, kernel_size, stride, padding,
@@ -142,7 +146,7 @@ class PyramidPoolingModule(nn.Module):
                                          bias=bias)
 
     def _make_stage(self, width_mult_list: List[float], in_channels_list: List[int], out_channels_list: List[int],
-                    pool_size):
+                    pool_size: int):
         return nn.Sequential(
             nn.AdaptiveAvgPool2d(pool_size),
             slimmable_conv1x1(width_mult_list, in_channels_list, out_channels_list)
@@ -218,3 +222,13 @@ class SEBlock(nn.Module):
         x = x * residual
 
         return x
+
+
+class SlimmableSegHead(nn.Sequential):
+    def __init__(self, width_mult_list: List[float], in_channels_list: List[int], num_class: int,
+                 act_type: str, hid_channels_list: List[int]):
+        num_class_list = [num_class for _ in in_channels_list]
+        super().__init__(
+            SlimmableConvBNAct(width_mult_list, in_channels_list, hid_channels_list, 3, act_type=act_type),
+            slimmable_conv1x1(width_mult_list, hid_channels_list, num_class_list)
+        )
