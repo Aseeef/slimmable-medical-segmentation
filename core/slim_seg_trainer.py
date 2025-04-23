@@ -67,20 +67,49 @@ class SlimmableSegTrainer(SegTrainer):
 
             # NOTE: Many of my comments here are copied directly from the slim-net and us-net papers
             else:
+                normalizer = 1
                 if config.slimmable_training_type == SlimmableTrainingType.S_NET.value:
                     with amp.autocast(enabled=config.amp_training):
                         widths = sorted(config.slim_width_mult_list, reverse=True)
+                        normalizer = len(widths)
+                        max_width = widths[0]
                         # train from highest to lowest
                         for w in widths:
                             # Switch the batch normalization parameters of current width on network M.
                             self.model.apply(lambda m: setattr(m, 'width_mult', w))
-                            # Execute subnetwork at current width, yˆ = M0(x).
-                            preds_w = self.model(images)
-                            # Compute loss, loss = criterion(ˆy, y).
-                            loss_w = self.loss_fn(preds_w, masks)
-                            total_loss += loss_w
-                            # Compute gradients, loss.backward().
-                            self.scaler.scale(loss_w).backward()
+                            if config.inplace_distillation:
+                                # Execute subnetwork at current width, yˆ = M0(x).
+                                if w == max_width:
+                                    # Execute full-network, y′ = M(x)
+                                    soft_masks = self.model(images)
+                                    # Compute loss, loss = criterion(y′, y).
+                                    # (loss_fn is dice loss)
+                                    loss_w = self.loss_fn(soft_masks, masks)
+                                    total_loss += loss_w
+                                    # Accumulate gradients, loss.backward()
+                                    self.scaler.scale(loss_w).backward()
+                                    # Stop gradients of y′ as label, y′ = y′.detach().
+                                    soft_masks = soft_masks.detach()
+                                else:
+                                    # Execute subnetwork at width, yˆ = M′(x).
+                                    preds_w = self.model(images)
+                                    # Compute loss, loss = criterion(yˆ, y′).
+                                    # since according to the paper, pure distillation is better than
+                                    # including ground truth, we train using the KL-Div
+                                    # Also note: this uses the KD formula proposed by Hinton et al. in the original KD paper
+                                    # (2015) for no other reason than this loss function came with our starter repo
+                                    loss_w = config.kd_loss_coefficient * kd_loss_fn(config, preds_w, soft_masks)
+                                    total_loss += loss_w
+                                    # Accumulate gradients, loss.backward()
+                                    self.scaler.scale(loss_w).backward()
+                            else:
+                                # Execute subnetwork at current width, yˆ = M0(x).
+                                preds_w = self.model(images)
+                                # Compute loss, loss = criterion(ˆy, y).
+                                loss_w = self.loss_fn(preds_w, masks)
+                                total_loss += loss_w
+                                # Compute gradients, loss.backward().
+                                self.scaler.scale(loss_w).backward()
                             # log per width loss
                             if config.use_tb and self.main_rank:
                                 self.writer.add_scalar(f'train/loss{w}', loss_w.detach(), self.train_itrs)
@@ -99,6 +128,8 @@ class SlimmableSegTrainer(SegTrainer):
                     # Randomly sample (n−2) widths, as width samples.
                     for _ in range(config.us_num_training_samples - 2):
                         widths_train.append(random.uniform(min_width, max_width))
+
+                    normalizer = config.us_num_training_samples
 
                     for w in sorted(widths_train, reverse=True):
                         # Note: paper also described something called
@@ -155,7 +186,7 @@ class SlimmableSegTrainer(SegTrainer):
             self.scheduler.step()
             self.ema_model.update(self.model, self.train_itrs)
 
-            loss = total_loss / config.us_num_training_samples
+            loss = total_loss / normalizer
             if self.main_rank:
                 pbar.set_description(('%s' * 2) %
                                      (f'Epoch:{self.cur_epoch}/{config.total_epoch}{" " * 4}|',
