@@ -75,7 +75,10 @@ def get_colormap(config):
         else:
             raise ValueError(f'Unsupport colormap type: {config.colormap}.')
 
-        colormap_json = {k: list(v) for k, v in colormap.items()}
+        #colormap_json = {k: list(v) for k, v in colormap.items()}
+        #getting type error where items are int64
+        colormap_json = {int(k): [int(x) for x in v] for k, v in colormap.items()}
+        
         with open(f'{config.save_dir}/colormap.json', 'w') as f:
             json.dump(colormap_json, f, indent=1)
 
