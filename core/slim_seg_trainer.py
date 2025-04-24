@@ -77,9 +77,10 @@ class SlimmableSegTrainer(SegTrainer):
                         "US-Net requires 2 widths, the min-width and the max-width inside slim_width_range."
                     assert config.slim_width_range[0] < config.slim_width_range[1], \
                         "slim_width_range[0] must be less than slim_width_range[1]."
-
+                    min_width = config.slim_width_range[1]
+                    max_width = config.slim_width_range[0]
                     # always train smallest + largest widths as per the sandwich rule (see paper)
-                    widths_train = [config.slim_width_range[1], config.slim_width_range[0]]
+                    widths_train = [min_width, max_width]
                     # Randomly sample (n−2) widths, as width samples.
                     for _ in range(config.us_num_training_samples - 2):
                         widths_train.append(random.uniform(min_width, max_width))
