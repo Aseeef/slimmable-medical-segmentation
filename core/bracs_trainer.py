@@ -109,6 +109,9 @@ class BracsTrainer(SegTrainer):
         for (images, masks) in pbar:
             images = images.to(self.device, dtype=torch.float32)
 
+
+
+
             # In order to validate different size of images, we can resize the image to be compatible with the model's stride,
             # and then resize the predicted mask back to the image size to calculate the metric. 
             # If you don't want this, simply set `val_img_stride=1` within the config file.
@@ -124,7 +127,7 @@ class BracsTrainer(SegTrainer):
             masks = masks.permute(0, 3, 1, 2)
             
 
-            preds = self.ema_model.ema(images)
+            preds = self.model(images) #Eliminate EMA Model!!!
             if H % stride != 0 or W % stride != 0:
                 preds = F.interpolate(preds, masks.size()[1:], mode='bilinear', align_corners=True)
 
@@ -139,6 +142,29 @@ class BracsTrainer(SegTrainer):
 
             for metric in self.metrics:
                 metric.update(preds.detach(), masks)
+
+           # ADDED validation set saving code for .npy predictions
+            if self.main_rank and not val_best:
+                os.makedirs(os.path.join(config.save_dir, 'val_outputs'), exist_ok=True)                
+                
+                input_images = images.cpu().numpy()          # [B, C, H, W]
+                pred_npys = preds.cpu().numpy()              # [B, C, H, W] or [B, H, W, C] depending on model output
+
+                for i in range(pred_npys.shape[0]):
+                    # Save prediction .npy
+                    pred_save_name = f"val_epoch{self.cur_epoch}_sample{i}_pred.npy"
+                    pred_save_path = os.path.join(config.save_dir, 'val_outputs', pred_save_name)
+                    np.save(pred_save_path, pred_npys[i])
+
+                    # Save corresponding input .npy (optional)
+                    if config.save_mask:
+                        input_save_name = f"val_epoch{self.cur_epoch}_sample{i}_input.npy"
+                        input_save_path = os.path.join(config.save_dir, 'val_outputs', input_save_name)
+                        np.save(input_save_path, input_images[i])
+
+                self.logger.info(f"[VAL] Saved predicted and input .npy arrays to {os.path.join(config.save_dir, 'val_outputs')}")
+
+
 
             if self.main_rank:
                 pbar.set_description(('%s'*1) % (f'Validating:{" "*4}|',))

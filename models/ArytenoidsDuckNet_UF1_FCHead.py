@@ -37,30 +37,8 @@ class ArytenoidsDuckNet_UF1_FCHead(nn.Module): #Changed num_class to 12, since t
         self.up_stage5 = UpsampleBlock(base_channel*16, base_channel*8, act_type)
         self.up_stage4 = UpsampleBlock(base_channel*8, base_channel*4, act_type)
         self.up_stage3 = UpsampleBlock(base_channel*4, base_channel*2, act_type)
-        self.up_stage2 = UpsampleBlock(base_channel*2, base_channel, act_type)
-        self.up_stage1 = UpsampleBlock(base_channel, base_channel, act_type)
-
         #First test: The segmentation head splits into 12 channels
         #self.seg_head = conv1x1(base_channel, 13)
-
-
-        '''
-        #Load best weights
-        checkpoint = torch.load(best_weights_path, map_location="cuda" if torch.cuda.is_available() else "cpu")
-        #self.load_state_dict(checkpoint, strict=False)
-        state_dict = checkpoint['state_dict']
-
-        # Filter out incompatible seg_head keys from the checkpoint
-        filtered_state_dict = {k: v for k, v in checkpoint.items() if not k.startswith("seg_head.")}
-
-        # Load safely
-        missing_keys, unexpected_keys = self.load_state_dict(filtered_state_dict, strict=False)
-
-        print(f"[INFO] Loaded pretrained weights (except for seg_head).")
-        print(f"[INFO] Missing keys: {missing_keys}")
-        print(f"[INFO] Unexpected keys: {unexpected_keys}")
-
-        '''
 
         #Freeze all Layers
         
@@ -70,23 +48,40 @@ class ArytenoidsDuckNet_UF1_FCHead(nn.Module): #Changed num_class to 12, since t
 
 
         #Define seg head AFTER loading params to avoid param loading issue :))
-        self.activation = nn.ReLU(inplace=True)
+        self.activation = nn.ReLU()
         self.fc1 = conv1x1(base_channel, 24)
         #Add fully connected layers at the segmentation head
         self.fc2 = conv1x1(24, 12)
-
-        self.seg_head_bracs = conv1x1(12, num_class)
         
 
-        #Unfreeze some layers
-        #ADJUST IF NECESSARY #Unfreezing JUST the classification layer.
-        self.up_stage1.requires_grad = True #Unfreeze layer that creates logits
-        self.seg_head_bracs.requires_grad = True
-        self.up_stage2.requires_grad= True
+        self.seg_head_bracs = conv1x1(12, num_class)
+        self.up_stage2 = UpsampleBlock(base_channel*2, base_channel, act_type)
+        self.up_stage1 = UpsampleBlock(base_channel, base_channel, act_type)
 
+        for name, param in self.named_parameters():
+            if any(key in name for key in ['fc1', 'fc2', 'seg_head_bracs']):
+                param.requires_grad = True
 
+        self.check_trainable_layers()
+        print("Normalization Layers Unfrozen")
+        for m in self.modules():
+            if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d, nn.LayerNorm)):
+                for param in m.parameters():
+                    param.requires_grad = True
 
-    
+        print("Model ArytenoidsDuckNet_UF1_FCHead: Please review below to ensure proper architecture and training updates")
+        print('----------------------------------------------------------------------------------------')
+
+    #Print model params
+    def check_trainable_layers(self):
+        print("\n--- Trainable Layers ---")
+        for name, param in self.named_parameters():
+            if param.requires_grad:
+                print(f"{name} — trainable")
+        print("\n--- Frozen Layers ---")
+        for name, param in self.named_parameters():
+            if not param.requires_grad:
+                print(f"{name} — frozen")
 
     def forward(self, x):
         x1, x1_skip, x = self.down_stage1(x)

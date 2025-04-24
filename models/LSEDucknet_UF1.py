@@ -14,7 +14,7 @@ from .model_registry import register_model
 
 
 @register_model()
-class LSEDuckNet(nn.Module):
+class LSEDuckNet_UF1(nn.Module):
     def __init__(self, num_class=1, n_channel=3, base_channel=34, act_type='relu'):
         super().__init__()
         self.down_stage1 = DownsampleBlock(n_channel, base_channel*2, act_type, fuse_channels=base_channel)
@@ -42,18 +42,20 @@ class LSEDuckNet(nn.Module):
 
         #Unfreeze some layers
         #ADJUST IF NECESSARY #Unfreezing JUST the classification layer.
+        
+        self.up_stage1_lse = UpsampleBlock(base_channel, base_channel, act_type)
         self.seg_head_lse = conv1x1(base_channel, num_class)
         self.check_trainable_layers()
 
-        # Unfreeze BatchNorm and LayerNorm layers
+        # Freeze BatchNorm and LayerNorm layers. Batch size 1 will mess these up. 
 
-        '''
+        
         for m in self.modules():
             if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d, nn.LayerNorm)):
                 for param in m.parameters():
-                    param.requires_grad = True'''
+                    param.requires_grad = False
 
-        print("Model LSEDuckNet: Please review below to ensure proper architecture and training updates")
+        print("Model LSEDuckNet_UF1: Please review below to ensure proper architecture and training updates")
         print('----------------------------------------------------------------------------------------')
 
         #Freeze all Layers

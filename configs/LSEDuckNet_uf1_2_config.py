@@ -5,12 +5,12 @@ from .config_registry import register_config
 
 
 @register_config
-class LSEDuckNet_config(BaseConfig):
+class LSEDuckNet_uf1_2_config(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = '/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/github_branch/save/LSEducknet_34'
+        self.save_dir = '/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/github_branch/save/LSEducknet_34_uf1_2'
         self.save_ckpt = True
         self.load_ckpt = True
         self.load_ckpt_path = '/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/github_branch/ducknet_34/best.pth'
@@ -22,19 +22,18 @@ class LSEDuckNet_config(BaseConfig):
         self.use_test_set = True
 
         # Model
-        self.model = 'lseducknet'
+        self.model = 'lseducknet_uf1_2'
         self.base_channel = 34
         self.num_class = 2
 
         # Training
-        self.total_epoch = 800
-        self.train_bs = 8  # this is PER GPU
+        self.total_epoch = 600
+        self.train_bs = 4  # this is PER GPU
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
-        self.base_lr = 5e-6
+        self.base_lr = 1e-5
         self.trainer='segtrainer'
         self.resume_training = False 
-        self.begin_val_epoch = 30
         #Predicting
         #self.is_testing = True
         #self.save_mask = True
@@ -51,7 +50,7 @@ class LSEDuckNet_config(BaseConfig):
         self.logger_name = 'LSEDucknet_Trainer'
 
         # Augmentation
-        self.crop_size = 320
+        self.crop_size = 640
         self.randscale = None
         self.brightness = [0.6, 1.6]
         self.contrast = 0.2
