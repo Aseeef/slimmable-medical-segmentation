@@ -29,7 +29,7 @@ class BaseConfig:
         # Training
         self.total_epoch = 200
         self.base_lr = 0.01
-        self.train_bs = 20      # For each GPU
+        self.train_bs = 16      # For each GPU
         self.use_aux = False
         self.aux_coef = None
 
@@ -42,7 +42,7 @@ class BaseConfig:
 
         # Testing
         self.is_testing = False
-        self.test_bs = 20
+        self.test_bs = 16
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None

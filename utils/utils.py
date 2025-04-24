@@ -48,7 +48,7 @@ def log_config(config, logger):
             'optimizer_type', 'lr_policy', 'total_epoch', 'train_bs', 'val_bs',  
             'train_num', 'val_num', 'gpu_num', 'num_workers', 'amp_training', 
             'DDP', 'trainer', 'slimmable_training_type', 'slim_width_mult_list',
-            'inplace_distillation', 'synBN', 'use_ema']
+            'inplace_distillation', 'kd_temperature', 'synBN', 'use_ema']
 
     config_dict = vars(config)
     infos = f"\n\n\n{'#'*25} Config Informations {'#'*25}\n" 
