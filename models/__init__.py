@@ -1,7 +1,6 @@
-import os, torch
-
 from .ducknet import DuckNet
 from .slimmable.slimmable_ducknet import SlimmableDuckNet
+from .slimmable.us_ducknet import USDuckNet
 from .resunet import ResUNet
 from .resunetpp import ResUNetPP
 from .unet import UNet
@@ -35,7 +34,7 @@ def get_model(config):
             model = model_hub[config.model](num_class=config.num_class, base_channel=config.base_channel)
 
     else:
-        raise NotImplementedError(f"Unsupport model type: {config.model}")
+        raise NotImplementedError(f"Unsupported model type: {config.model}")
 
     return model
 

@@ -5,12 +5,12 @@ from .config_registry import register_config
 
 
 @register_config
-class SlimDuckNetConfig(BaseConfig):
+class KDSlimDuckNetConfig(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/slimmable_ducknet_34'
+        self.save_dir = 'save/kd_slimmable_ducknet_34'
 
         # Dataset
         self.dataset = 'polyp'
@@ -25,7 +25,7 @@ class SlimDuckNetConfig(BaseConfig):
         # Training
         self.amp_training = True  # increases training speed by 7% in my tests
         self.total_epoch = 600
-        self.train_bs = 20  # this is PER GPU
+        self.train_bs = 24  # this is PER GPU
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
@@ -55,6 +55,10 @@ class SlimDuckNetConfig(BaseConfig):
 
         # Slimmable Networks
         self.slimmable_training_type = SlimmableTrainingType.S_NET.value
+        self.inplace_distillation = True
+        self.kd_loss_type = 'kl_div'
+        self.kd_loss_coefficient = 1.0
+        self.kd_temperature = 1.0
         # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
         self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
         self.trainer = 'slimmablesegtrainer'

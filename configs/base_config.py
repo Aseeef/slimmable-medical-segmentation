@@ -1,5 +1,11 @@
 import os
+from enum import Enum
 
+
+class SlimmableTrainingType(Enum):
+    NONE = "none"
+    S_NET = "s-net"
+    US_NET = "us-net"
 
 class BaseConfig:
 
@@ -23,7 +29,7 @@ class BaseConfig:
         # Training
         self.total_epoch = 200
         self.base_lr = 0.01
-        self.train_bs = 20      # For each GPU
+        self.train_bs = 16      # For each GPU
         self.use_aux = False
         self.aux_coef = None
 
@@ -36,7 +42,7 @@ class BaseConfig:
 
         # Testing
         self.is_testing = False
-        self.test_bs = 20
+        self.test_bs = 16
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None
@@ -100,11 +106,17 @@ class BaseConfig:
         self.local_rank = int(os.getenv('LOCAL_RANK', -1))
         self.main_rank = self.local_rank in [-1, 0]
 
-        # Slim Size Multipliers
-        self.slimmable_training = False
-        self.nonuniform = False
-        self.num_sample_training = 2
+        # Slimmable Neural Networks Stuff
+        self.slimmable_training_type = SlimmableTrainingType.NONE.value
+        self.inplace_distillation = False
+        self.kd_loss_type = 'kl_div'
+        self.kd_loss_coefficient = 1.0
+        self.kd_temperature = 1.0
+        # the number of BATCHES to use for calibration (not the total number of training items)
+        self.bn_calibration_batch_size = 3
         self.slim_width_mult_list = None
+        self.slim_width_range = None
+        self.us_num_training_samples = None
 
         # The trainer to use
         self.trainer = 'segtrainer'
