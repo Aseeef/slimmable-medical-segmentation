@@ -73,7 +73,7 @@ class BaseConfig:
         self.logger_name = None
 
         # Training setting
-        self.amp_training = True  # increases training speed by 7% with no noticeable performance hit
+        self.amp_training = False  # increases training speed by 7% with no noticeable performance hit
         self.resume_training = True
         self.load_ckpt = True
         self.load_ckpt_path = None

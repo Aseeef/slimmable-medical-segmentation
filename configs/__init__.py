@@ -8,6 +8,7 @@ from .kd_slim_ducknet_config import KDSlimDuckNetConfig
 from .kd_hot_slim_ducknet_config import KDHotSlimDuckNetConfig
 from .us_ducknet_config import USSlimDuckNetConfig
 from .optimized_slim_ducknet_config import OptimizedSlimDuckNetConfig
+from .optimized_slim_ducknet_config_2 import OptimizedSlimDuckNetConfig2
 from .optuna_config import OptunaConfig
 from .config_registry import config_hub
 #Unfreeze Segmentation Head

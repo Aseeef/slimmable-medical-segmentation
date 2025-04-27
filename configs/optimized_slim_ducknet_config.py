@@ -10,7 +10,7 @@ class OptimizedSlimDuckNetConfig(BaseConfig):
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/optimized_slimmable_ducknet_36'
+        self.save_dir = 'save/optimized_slimmable_ducknet_34'
 
         # Dataset
         self.dataset = 'polyp'
