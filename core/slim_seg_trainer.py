@@ -45,7 +45,6 @@ class SlimmableSegTrainer(SegTrainer):
             if config.use_aux:
                 # TODO: maybe something we can experiment with later
                 raise NotImplementedError("Auxiliary loss not implemented yet.")
-                ...
                 #
                 # with amp.autocast(enabled=config.amp_training):
                 #     preds, preds_aux = self.model(images, is_training=True)

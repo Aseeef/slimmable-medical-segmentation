@@ -2,6 +2,7 @@ from .ducknet_34_config import DuckNet34Config
 from .ducknet_32_config import DuckNet32Config
 from .ducknet_17_config import DuckNet17Config
 from .ducknet_8_config import DuckNet8Config
+from .ducknet_3_config import DuckNet3Config
 from .slim_ducknet_config import SlimDuckNetConfig
 from .kd_slim_ducknet_config import KDSlimDuckNetConfig
 from .kd_hot_slim_ducknet_config import KDHotSlimDuckNetConfig
