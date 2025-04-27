@@ -7,8 +7,7 @@ from torch.cuda import amp
 import torch.nn.functional as F
 from typing_extensions import override
 
-from .base_trainer import BaseTrainer
-from utils import (get_seg_metrics, sampler_set_epoch, get_colormap)
+from utils import (get_seg_metrics, sampler_set_epoch, get_colormap, de_parallel)
 from .seg_trainer import SegTrainer
 from .trainer_registry import register_trainer
 
@@ -17,10 +16,6 @@ from .trainer_registry import register_trainer
 class BracsTrainer(SegTrainer):
     def __init__(self, config):
         super().__init__(config)
-        if config.is_testing:
-            self.colormap = torch.tensor(get_colormap(config)).to(self.device)
-        else:
-            self.metrics = [get_seg_metrics(config, metric_name).to(self.device) for metric_name in config.metrics]
 
     @override
     def train_one_epoch(self, config):

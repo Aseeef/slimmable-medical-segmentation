@@ -32,7 +32,7 @@ class LSEDuckNet_config(BaseConfig):
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 5e-6
-        self.trainer='segtrainer'
+        self.trainer= 'lsetrainer'
         self.resume_training = False 
         self.begin_val_epoch = 30
         #Predicting

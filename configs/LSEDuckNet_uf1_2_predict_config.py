@@ -31,7 +31,7 @@ class LSEDuckNet_uf1_2_predict_config(BaseConfig):
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
-        self.trainer='segtrainer'
+        self.trainer='lsetrainer'
         
         #Predicting
         self.is_testing = True
