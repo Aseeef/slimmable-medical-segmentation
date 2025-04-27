@@ -49,6 +49,7 @@ class BaseConfig:
         self.save_mask = True
         self.blend_prediction = True
         self.blend_alpha = 0.3
+        self.test_dataset = 'test_dataset'
 
         # Loss
         self.loss_type = 'ce'

@@ -48,7 +48,7 @@ def get_loader(config, rank, mode, pin_memory=True, drop_last=True):
 def get_test_loader(config): 
     from .test_dataset import TestDataset
     from .lse_test_dataset import LSETestDataset
-    if config.test_dataset =='testdataset':
+    if config.test_dataset == 'test_dataset':
         dataset = TestDataset(config)
     elif config.test_dataset == 'lse_test_dataset':
         dataset = LSETestDataset(config)
