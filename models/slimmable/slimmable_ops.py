@@ -205,6 +205,27 @@ class SlimmableLinear(nn.Linear):
             bias = self.bias
         return nn.functional.linear(input, weight, bias)
 
+
+def make_divisible(v: float, divisor: int = 8, min_value: int = 1) -> int:
+    """
+    Ensures that the number `v` is divisible by `divisor` and greater than `min_value`.
+
+    Args:
+        v (int): Original number.
+        divisor (int): Divisor to align to. Default is 8.
+        min_value (int): Minimum allowed value. Default is 1.
+
+    Returns:
+        int: Adjusted number that meets divisibility constraint.
+    """
+    if min_value is None:
+        min_value = divisor
+    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v
+
 class USConv2d(nn.Conv2d):
     """
     A Conv2d layer with dynamically adjustable input/output channels for universal slimmability.
@@ -241,38 +262,34 @@ class USConv2d(nn.Conv2d):
         self.us = us
         self.ratio = ratio
 
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """
-        Forward pass with width-dependent slicing of weights and optional averaging.
+        Width aware Conv2d for US Network
 
-        Args:
-            input (Tensor): Input tensor of shape (N, C, H, W).
-
-        Returns:
-            Tensor: Convolved output tensor.
+        * out_channels   follows the bucket dictated by width_mult
+        * in_channels    whatever #channels the tensor actually carries (x.size(1))
         """
-        if self.us[0]:
-            self.in_channels = make_divisible(
-                self.in_channels_max
-                * self.width_mult
-                / self.ratio[0]) * self.ratio[0]
+
+        # decide the output slice
         if self.us[1]:
-            self.out_channels = make_divisible(
-                self.out_channels_max
-                * self.width_mult
-                / self.ratio[1]) * self.ratio[1]
-        self.groups = self.in_channels if self.depthwise else 1
-        weight = self.weight[:self.out_channels, :self.in_channels, :, :]
-        if self.bias is not None:
-            bias = self.bias[:self.out_channels]
-        else:
-            bias = self.bias
-        y = nn.functional.conv2d(
-            input, weight, bias, self.stride, self.padding,
-            self.dilation, self.groups)
-        if self.conv_averaged:
-            y = y * (max(self.in_channels_list) / self.in_channels)
-        return y
+            wanted = make_divisible(self.out_channels_max *
+                                    self.width_mult / self.ratio[1]) * self.ratio[1]
+            self.out_channels = min(wanted, self.out_channels_max)
+
+        # take the actual input‑channel count
+        real_in = x.size(1)
+        self.in_channels = real_in
+
+        # set groups
+        self.groups = real_in if self.depthwise else self.groups
+
+        # slice weights, bias and conv
+        weight = self.weight[: self.out_channels, : real_in, :, :]
+        bias   = None if self.bias is None else self.bias[: self.out_channels]
+
+        return F.conv2d(x, weight, bias,
+                        self.stride, self.padding,
+                        self.dilation, self.groups)
 
 
 class USConvTranspose2d(nn.ConvTranspose2d):
@@ -282,7 +299,7 @@ class USConvTranspose2d(nn.ConvTranspose2d):
                  output_padding: int | tuple[int, ...] = 0,
                  dilation: int | tuple[int, int] = 1, groups: int = 1,
                  depthwise: bool = False, bias: bool = True,
-                 us: tuple[bool, bool] = [True, True], conv_averaged: bool = False):
+                 us: tuple[bool, bool] = [True, True], ratio: tuple[int, int] = [1, 1], conv_averaged: bool = False):
         super(USConv2d, self).__init__(
             in_channels, out_channels,
             kernel_size, stride=stride, padding=padding, output_padding=output_padding, dilation=dilation,
@@ -293,12 +310,19 @@ class USConvTranspose2d(nn.ConvTranspose2d):
         self.width_mult = None
         self.conv_averaged = conv_averaged
         self.us = us
+        self.ratio = ratio
 
     def forward(self, input: Tensor) -> Tensor:
         if self.us[0]:
-            self.in_channels = int(self.in_channels_max * self.width_mult)
+            self.in_channels = make_divisible(
+                self.in_channels_max
+                * self.width_mult
+                / self.ratio[0]) * self.ratio[0]
         if self.us[1]:
-            self.out_channels = int(self.in_channels_max * self.width_mult)
+            self.out_channels = make_divisible(
+                self.out_channels_max
+                * self.width_mult
+                / self.ratio[1]) * self.ratio[1]
         self.groups = self.in_channels if self.depthwise else 1
         weight = self.weight[:self.out_channels, :self.in_channels, :, :]
         if self.bias is not None:
@@ -343,9 +367,11 @@ class USLinear(nn.Linear):
             Tensor: Output tensor of shape (N, out_features).
         """
         if self.us[0]:
-            self.in_features = int(self.in_features_max * self.width_mult)
+            self.in_features = make_divisible(
+                self.in_features_max * self.width_mult)
         if self.us[1]:
-            self.out_features = int(self.out_features_max * self.width_mult)
+            self.out_features = make_divisible(
+                self.out_features_max * self.width_mult)
         weight = self.weight[:self.out_features, :self.in_features]
         if self.bias is not None:
             bias = self.bias[:self.out_features]
@@ -363,55 +389,50 @@ class USBatchNorm2d(nn.BatchNorm2d):
     recommended for performance and separate tracking of statistics.
     """
 
-    def __init__(self, num_features: int, width_mult_list: List[float] = None):
+    def __init__(self, num_features: int, ratio: int = 1, width_mult_list: List[float] = None):
         super(USBatchNorm2d, self).__init__(
             num_features, affine=True, track_running_stats=False)
         self.width_mult_list = width_mult_list
         self.num_features_max = num_features
+        self.ratio = ratio
         # for tracking performance during training
+        #self.bn = None if width_mult_list is None else nn.ModuleList([
+            #nn.BatchNorm2d(i, affine=False) for i in [
+            #    make_divisible(
+            #        self.num_features_max * width_mult / ratio) * ratio
+            #    for width_mult in self.width_mult_list]])
         self.bn = None if width_mult_list is None else nn.ModuleList([
-            nn.BatchNorm2d(i, affine=False) for i in [
-                int(self.num_features_max * width_mult)
-                for width_mult in self.width_mult_list]])
+            nn.BatchNorm2d(
+                make_divisible(self.num_features_max * width_mult / self.ratio) * self.ratio, affine=False)
+            for width_mult in self.width_mult_list])
+
         self.width_mult = None
         self.ignore_model_profiling = True
 
-    def forward(self, input: Tensor) -> Tensor:
-        """
-        Forward pass using dynamically selected running stats and affine parameters.
+    def forward(self, x: Tensor) -> Tensor:
+        c = x.size(1)                     # exactly the input channels (shape of tensor)
 
-        Args:
-            input (Tensor): Input tensor of shape (N, C, H, W).
+        # affine‑params sliced to length c
+        weight =   self.weight[:c]
+        bias   =   self.bias[:c]
 
-        Returns:
-            Tensor: Batch-normalized output.
-        """
-        weight = self.weight
-        bias = self.bias
-        c = int(self.num_features_max * self.width_mult)
+        if self.bn is not None:
+            bn = self._pick_bn(c)         # guaranteed len >= c
+            running_mean = bn.running_mean[:c]
+            running_var  = bn.running_var [:c]
+        else:                             # single universal BN
+            running_mean = self.running_mean[:c]
+            running_var  = self.running_var [:c]
 
-        if self.width_mult in self.width_mult_list:
-            idx = self.width_mult_list.index(self.width_mult)
-            y = nn.functional.batch_norm(
-                input,
-                self.bn[idx].running_mean,
-                self.bn[idx].running_var,
-                weight[:c],
-                bias[:c],
-                self.training,
-                self.momentum,
-                self.eps)
-        else:
-            y = nn.functional.batch_norm(
-                input,
-                self.running_mean,
-                self.running_var,
-                weight[:c],
-                bias[:c],
-                self.training,
-                self.momentum,
-                self.eps)
-        return y
+        return F.batch_norm(x, running_mean, running_var,
+                            weight, bias, self.training,
+                            self.momentum, self.eps)
+
+    def _pick_bn(self, need_c):
+        for bn in self.bn:                # the bn list is sorted from small to large
+            if bn.running_mean.numel() >= need_c:
+                return bn
+        return self.bn[-1]
 
 
 def pop_channels(autoslim_channels: List[List[int]]):

@@ -25,7 +25,7 @@ class USSlimDuckNetConfig(BaseConfig):
         # Training
         self.amp_training = True  # increases training speed by 7% in my tests
         self.total_epoch = 600
-        self.train_bs = 20  # this is PER GPU
+        self.train_bs = 20  # this is PER GPU (originally at 20, set to 2 for debugging)
         self.loss_type = 'dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
