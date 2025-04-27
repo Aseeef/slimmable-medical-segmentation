@@ -19,6 +19,14 @@ from .bracs_ducknet_34_uf1_config_predict import BracsDuckNet34_uf1_Config_Predi
 from .bracs_ducknet_34_uf1_fchead_config import BracsDuckNet34_uf1_fchead_Config
 #Arytenoids ducknet, 3 class classification.
 from .arytenoids_ducknet_34_uf1_fchead_config import ArytenoidsDuckNet34_uf1_fchead_Config
+#LSE ducknet, binary
+from .LSEDuckNet_config import LSEDuckNet_config
+from .LSEDuckNet_uf1_config import LSEDuckNet_uf1_config
+from .LSEDuckNet_predict_config import LSEDuckNet_predict_config
+from .LSEDuckNet_uf1_predict_config import LSEDuckNet_uf1_predict_config
+from .LSEDuckNet_uf1_2_config import LSEDuckNet_uf1_2_config 
+from .LSEDuckNet_uf1_2_predict_config import LSEDuckNet_uf1_2_predict_config
+
 
 def get_config(name):
     if name in config_hub:

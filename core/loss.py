@@ -397,4 +397,3 @@ def kd_loss_fn(config, outputs, outputsT):
         raise NotImplementedError(f"Unsupported loss type: {config.kd_loss_type}")
 
     return lossT
-

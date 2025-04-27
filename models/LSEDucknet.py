@@ -5,22 +5,17 @@ Create by:  zh320
 Date:       2024/11/08
 """
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from .modules import conv1x1, ConvBNAct, Activation
 from .model_registry import register_model
 
-'''
-This is an initial implementation of BRACSDuckNet, a DuckNet that will be re-trained to produce masks for BRACS. 
-
-
-We will need to modify the outputlayer size
-'''
 
 @register_model()
-class BRACSDuckNet_UF1_FCHead(nn.Module): #Changed num_class to 12, since there are 12 classes and 1 "everything else"
-    def __init__(self, num_class=1, n_channel=3, base_channel=17, act_type='relu', best_weights_path = r'/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/medical-segmentation-pytorch/save/best.pth'):
+class LSEDuckNet(nn.Module):
+    def __init__(self, num_class=1, n_channel=3, base_channel=34, act_type='relu'):
         super().__init__()
         self.down_stage1 = DownsampleBlock(n_channel, base_channel*2, act_type, fuse_channels=base_channel)
         self.down_stage2 = DownsampleBlock(base_channel*2, base_channel*4, act_type)
@@ -38,55 +33,41 @@ class BRACSDuckNet_UF1_FCHead(nn.Module): #Changed num_class to 12, since there 
         self.up_stage4 = UpsampleBlock(base_channel*8, base_channel*4, act_type)
         self.up_stage3 = UpsampleBlock(base_channel*4, base_channel*2, act_type)
         self.up_stage2 = UpsampleBlock(base_channel*2, base_channel, act_type)
-        self.up_stage1 = UpsampleBlock(base_channel, base_channel, act_type)
+        self.up_stage1_lse = UpsampleBlock(base_channel, base_channel, act_type)
 
-        #First test: The segmentation head splits into 12 channels
-        #self.seg_head = conv1x1(base_channel, 13)
+        #Freeze all layers
+        for name, param in self.named_parameters():
+            param.requires_grad = False
 
-
-        '''
-        #Load best weights
-        checkpoint = torch.load(best_weights_path, map_location="cuda" if torch.cuda.is_available() else "cpu")
-        #self.load_state_dict(checkpoint, strict=False)
-        state_dict = checkpoint['state_dict']
-
-        # Filter out incompatible seg_head keys from the checkpoint
-        filtered_state_dict = {k: v for k, v in checkpoint.items() if not k.startswith("seg_head.")}
-
-        # Load safely
-        missing_keys, unexpected_keys = self.load_state_dict(filtered_state_dict, strict=False)
-
-        print(f"[INFO] Loaded pretrained weights (except for seg_head).")
-        print(f"[INFO] Missing keys: {missing_keys}")
-        print(f"[INFO] Unexpected keys: {unexpected_keys}")
-
-        '''
-
-        #Freeze all Layers
-        
-        for param in self.parameters():
-            param.requires_grad = True #Freeze the paramater
-        
-
-
-        #Define seg head AFTER loading params to avoid param loading issue :))
-        self.activation = nn.ReLU(inplace=True)
-        self.fc1 = conv1x1(base_channel, 64)
-        #Add fully connected layers at the segmentation head
-        self.fc2 = conv1x1(64, 48)
-        self.fc3 = conv1x1(48, 32)
-        self.seg_head_bracs = conv1x1(32, num_class)
-        
 
         #Unfreeze some layers
         #ADJUST IF NECESSARY #Unfreezing JUST the classification layer.
-        for layer in [self.fc1, self.fc2, self.fc3, self.seg_head_bracs]:
-            for param in layer.parameters():
-                param.requires_grad = True
+        self.seg_head_lse = conv1x1(base_channel, num_class)
+        self.check_trainable_layers()
 
+        # Unfreeze BatchNorm and LayerNorm layers
 
+        '''
+        for m in self.modules():
+            if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d, nn.LayerNorm)):
+                for param in m.parameters():
+                    param.requires_grad = True'''
 
-    
+        print("Model LSEDuckNet: Please review below to ensure proper architecture and training updates")
+        print('----------------------------------------------------------------------------------------')
+
+        #Freeze all Layers
+
+    def check_trainable_layers(self):
+        print("\n--- Trainable Layers ---")
+        for name, param in self.named_parameters():
+            if param.requires_grad:
+                print(f"{name} — trainable")
+        print("\n--- Frozen Layers ---")
+        for name, param in self.named_parameters():
+            if not param.requires_grad:
+                print(f"{name} — frozen")
+        
 
     def forward(self, x):
         x1, x1_skip, x = self.down_stage1(x)
@@ -95,25 +76,16 @@ class BRACSDuckNet_UF1_FCHead(nn.Module): #Changed num_class to 12, since there 
         x4, x4_skip, x = self.down_stage4(x3+x, x)
         x5, x5_skip, x = self.down_stage5(x4+x, x)
         x = self.mid_stage(x5+x)
+
         x = self.up_stage5(x, x5_skip)
         x = self.up_stage4(x, x4_skip)
         x = self.up_stage3(x, x3_skip)
         x = self.up_stage2(x, x2_skip)
-        x = self.up_stage1(x, x1_skip)
+        x = self.up_stage1_lse(x, x1_skip)
+        x = self.seg_head_lse(x)
 
-        #Segmentation head
-        x = self.fc1(x)
-        x = self.activation(x)
-        x = self.fc2(x)
-        x = self.activation(x)
-        x = self.fc3(x)
-        x = self.activation(x)
-        x = self.seg_head_bracs(x)
-        #print(x.shape)
-        #x is (B x H x W x C, need to reorder to B x C x H x W)
-        #x = x.permute(0, 3, 1, 2)
         return x
-
+        
 
 class DownsampleBlock(nn.Module):
     def __init__(self, in_channels, out_channels, act_type, fuse_channels=None):

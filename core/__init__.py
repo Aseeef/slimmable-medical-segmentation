@@ -9,6 +9,6 @@ def get_trainer(config) -> BaseTrainer:
     if config.trainer in trainer_hub.keys():
         trainer = trainer_hub[config.trainer](config=config)
     else:
-        raise NotImplementedError('Unsupported trainer!')
+        raise NotImplementedError(f'Unsupported trainer! Available trainers: {trainer_hub.keys()}')
 
     return trainer

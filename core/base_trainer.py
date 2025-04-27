@@ -70,6 +70,7 @@ class BaseTrainer:
 
         # Load specific checkpoints if needed
         self.load_ckpt(config)
+        self.logger.info(f'[!] Loaded checkpoints from {config.load_ckpt_path} during __init__ of trainer')
 
         # Use exponential moving average of checkpoint update if needed
         if not config.is_testing:
@@ -98,8 +99,7 @@ class BaseTrainer:
                     # Save best model
                     self.best_score = val_score
                     if config.save_ckpt:
-                        self.save_ckpt(config, save_best=True) 
-
+                        self.save_ckpt(config, save_best=True)
             if self.main_rank and config.save_ckpt:
                 # Save last model    
                 self.save_ckpt(config)
@@ -144,7 +144,7 @@ class BaseTrainer:
     def load_ckpt(self, config):
         if config.load_ckpt and os.path.isfile(config.load_ckpt_path):
             checkpoint = torch.load(config.load_ckpt_path, map_location=torch.device(self.device))
-            self.model.load_state_dict(checkpoint['state_dict'])
+            self.model.load_state_dict(checkpoint['state_dict'],strict=False) #Add to account for transfer learning
             if self.main_rank:
                 self.logger.info(f"Load model state dict from {config.load_ckpt_path}")
 
@@ -169,7 +169,7 @@ class BaseTrainer:
         save_name = 'best.pth' if save_best else 'last.pth'
         save_path = f'{config.save_dir}/{save_name}'
         state_dict = self.ema_model.ema.state_dict() if save_best else de_parallel(self.model).state_dict()
-
+        print('saving ckpt')
         torch.save({
             'cur_epoch': self.cur_epoch,
             'best_score': self.best_score,

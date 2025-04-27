@@ -10,14 +10,16 @@ class BracsDuckNet34_uf1_fchead_Config(BaseConfig):
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/bracsducknet_34_uf1_fchead'
+        self.save_dir = '/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/github_branch/save/bracsducknet_34_uf1_fchead'
+        self.save_example_path = self.save_dir
+        self.save_ckpt = True
 
         # Dataset
         self.dataset = 'larynx_seg'
         self.subset = 'kvasir'
         self.data_root = r"/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/github_branch/LarynxDataset/LarynxDataset"  #os.path.join('PolypDataset', 'LarynxDataset')
         #self.data_root = r'/projectnb/ec523/projects/Team_A+/larynx_transfer_learning/medical-segmentation-pytorch/LarynxDataset/LarynxDataset'
-        
+                
         print(f'looking for data in {self.data_root}')
 
         self.use_test_set = True
@@ -30,10 +32,11 @@ class BracsDuckNet34_uf1_fchead_Config(BaseConfig):
         # Training
         self.total_epoch = 600
         self.train_bs = 1  # this is PER GPU
-        self.loss_type = 'modded_dice'
+        self.loss_type = 'ce_dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-5
-
+        self.trainer = 'bracstrainer'
+        self.load_ckpt = False
         # Validating
         self.metrics = ['dice', 'iou']
         self.val_bs = 1
@@ -75,6 +78,3 @@ class BracsDuckNet34_uf1_fchead_Config(BaseConfig):
         #self.affine_rotate = (-10, 10)
         #self.affine_translate = (-0.05, 0.05)
         #self.affine_scale = (0.8, 1.2)
-
-        # Trainer
-        self.trainer = 'bracstrainer'
