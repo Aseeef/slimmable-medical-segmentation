@@ -152,7 +152,12 @@ class BaseTrainer:
                 self.cur_epoch = checkpoint['cur_epoch'] + 1
                 self.best_score = checkpoint['best_score']
                 self.optimizer.load_state_dict(checkpoint['optimizer'])
-                self.scheduler.load_state_dict(checkpoint['scheduler'])
+                # only load scheduler if NOT switching schedulers
+                # we assume cos_anneal is only used if you are fine-tuning a pretrained model
+                if config.lr_policy == 'cos_anneal':
+                    self.scheduler = get_scheduler(config, self.optimizer, trained_epochs=self.cur_epoch)
+                else:
+                    self.scheduler.load_state_dict(checkpoint['scheduler'])
                 self.train_itrs = self.cur_epoch * config.iters_per_epoch
                 if self.main_rank:
                     self.logger.info(f"Resume training from {config.load_ckpt_path}")
