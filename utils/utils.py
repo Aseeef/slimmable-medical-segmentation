@@ -56,13 +56,14 @@ def log_config(config, logger):
     logger.info(infos)
 
 
+
 def get_colormap(config):
     if config.colormap_path is not None and os.path.isfile(config.colormap_path):
         assert config.colormap_path.endswith('json')
         with open(config.colormap_path, 'r') as f:
             colormap_json = json.load(f)
 
-        colormap = {k: tuple(v) for k, v in colormap_json.items()}
+        colormap = {int(k): tuple(v) for k, v in colormap_json.items()}
 
     else:
         if config.colormap == 'random':
@@ -75,7 +76,8 @@ def get_colormap(config):
         else:
             raise ValueError(f'Unsupport colormap type: {config.colormap}.')
 
-        colormap_json = {k: list(v) for k, v in colormap.items()}
+        # 🛠️ Fix starts here:
+        colormap_json = {int(k): [int(x) for x in v] for k, v in colormap.items()}
         with open(f'{config.save_dir}/colormap.json', 'w') as f:
             json.dump(colormap_json, f, indent=1)
 
@@ -85,3 +87,33 @@ def get_colormap(config):
         raise ValueError('Length of colormap is smaller than the number of class.')
     else:
         return colormap[:config.num_class]
+
+# def get_colormap(config):
+#     if config.colormap_path is not None and os.path.isfile(config.colormap_path):
+#         assert config.colormap_path.endswith('json')
+#         with open(config.colormap_path, 'r') as f:
+#             colormap_json = json.load(f)
+
+#         colormap = {k: tuple(v) for k, v in colormap_json.items()}
+
+#     else:
+#         if config.colormap == 'random':
+#             random_colors = np.random.randint(0, 256, size=(config.num_class, 3))
+#             colormap = {i: tuple(color) for i, color in enumerate(random_colors)}
+
+#         elif config.colormap == 'custom':
+#             raise NotImplementedError()
+
+#         else:
+#             raise ValueError(f'Unsupport colormap type: {config.colormap}.')
+
+#         colormap_json = {k: list(v) for k, v in colormap.items()}
+#         with open(f'{config.save_dir}/colormap.json', 'w') as f:
+#             json.dump(colormap_json, f, indent=1)
+
+#     colormap = [color for color in colormap.values()]
+
+#     if len(colormap) < config.num_class:
+#         raise ValueError('Length of colormap is smaller than the number of class.')
+#     else:
+#         return colormap[:config.num_class]

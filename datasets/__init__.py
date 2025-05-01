@@ -45,9 +45,15 @@ def get_loader(config, rank, mode, pin_memory=True, drop_last=True):
     return loader
 
 
-def get_test_loader(config): 
+
+def get_test_loader(config):
     from .test_dataset import TestDataset
-    dataset = TestDataset(config)
+    from .lse_test_dataset import LSETestDataset
+    if config.test_dataset =='testdataset':
+        dataset = TestDataset(config)
+    elif config.test_dataset == 'lse_test_dataset':
+        print('initializing LSETestDataset object')
+        dataset = LSETestDataset(config)
 
     config.test_num = len(dataset)
 
@@ -55,7 +61,7 @@ def get_test_loader(config):
         raise NotImplementedError()
 
     else:
-        test_loader = DataLoader(dataset, batch_size=config.test_bs, 
+        test_loader = DataLoader(dataset, batch_size=config.test_bs,
                                     shuffle=False, num_workers=config.num_workers)
 
     return test_loader

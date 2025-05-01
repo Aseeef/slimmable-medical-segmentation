@@ -37,10 +37,32 @@ if __name__ == '__main__':
     trainer = get_trainer(config)
 
 
-    # run scripts
-    print('running scripts')
-    if config.is_testing:
-        trainer.predict(config)
-    # added for inference runner
-    else:    
-        trainer.test(config)
+    #run scripts
+    # print('running scripts')
+    # if config.is_testing:
+    #     print('.predict')
+    #     trainer.predict(config)
+    #     print('finished predicitng')
+    # # added for inference runner
+    # else:    
+    #     trainer.test(config)
+
+
+    print('running scripts to run at different widths')
+    widths = [0.25, 0.5, 0.75, 1.0]  
+    results = []
+
+    for width in widths:
+        print(f'\nSetting network width to {width}')
+        trainer.set_width(config, width)
+        
+        if config.is_testing:
+            print('running .predict')
+            outputs = trainer.predict(config)
+            print('finished predicting')
+            avg_time = outputs['avg_inference_time_sec']
+        else:
+            outputs = trainer.test(config)
+        
+        # Assume trainer.test or trainer.predict returns accuracy somehow
+        # Adjust if your function returns differently

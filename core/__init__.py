@@ -1,7 +1,7 @@
 from .base_trainer import BaseTrainer
 from .bracs_trainer import SegTrainer
 from .slim_seg_trainer import SlimmableSegTrainer
-from .jl_inference_runner import SlimmableSegInferenceRunner
+# from .jl_inference_runner import SlimmableSegInferenceRunner
 from .loss import get_loss_fn
 from .trainer_registry import trainer_hub
 

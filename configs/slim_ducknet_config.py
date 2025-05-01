@@ -5,7 +5,7 @@ from .config_registry import register_config
 
 
 @register_config
-class SlimDuckNetConfig_Inference(BaseConfig):
+class SlimDuckNetConfig(BaseConfig):
 
     def __init__(self,):
         super().__init__()
@@ -17,13 +17,17 @@ class SlimDuckNetConfig_Inference(BaseConfig):
         self.subset = 'kvasir'
         self.data_root = os.path.join('PolypDataset', 'Kvasir-SEG')
         self.use_test_set = True
+        self.blend_prediction = False
+
 
         self.is_testing = True
         self.test_data_folder = os.path.join('PolypDataset', 'Kvasir-SEG', 'test')  
 
-        # Model
+        # Model and loading
         self.model = 'slimmableducknet'
-        self.base_channel = 34
+        self.base_channel = 17
+        self.load_ckpt = True
+        self.load_ckpt_path = f"{self.save_dir}/best.pth"
 
         # Training
         self.amp_training = True  # increases training speed by 7% in my tests
@@ -60,4 +64,12 @@ class SlimDuckNetConfig_Inference(BaseConfig):
 
         # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
         self.slim_width_mult_list = [0.25, 0.5, 0.75, 1]
-        self.trainer = 'slimmableseginferencerunner'
+        self.run_slimmable = True
+        self.trainer = 'slimmablesegtrainer'
+        self.test_dataset = 'lse_test_dataset'
+        self.test_data_folder = "/projectnb/ec523/projects/Team_A+/Justin_slimmable_net/PolypDataset/Kvasir-SEG/test/images"
+
+        
+        
+
+

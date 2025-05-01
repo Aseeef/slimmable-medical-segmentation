@@ -5,6 +5,7 @@ from PIL import Image
 from tqdm import tqdm
 from torch.cuda import amp
 import torch.nn.functional as F
+from core.loss import DiceLoss
 
 from .base_trainer import BaseTrainer
 from utils import (get_seg_metrics, sampler_set_epoch, get_colormap)
@@ -138,20 +139,30 @@ class SegTrainer(BaseTrainer):
 
     @torch.no_grad()
     def predict(self, config):
+        import time
         if config.DDP:
             raise ValueError('Predict mode currently does not support DDP.')
 
         self.logger.info('\nStart predicting...\n')
 
-        self.model.eval() # Put model in evalation mode
+        self.model.eval()  # Put model in evaluation mode
+
+        total_inference_time = 0.0
+        total_images = 0
 
         for (images, images_aug, img_names) in tqdm(self.test_loader):
             images_aug = images_aug.to(self.device, dtype=torch.float32)
 
+            # Measure inference time ONLY for model prediction
+            start_time = time.time()
             preds = self.model(images_aug)
+            end_time = time.time()
+
+            batch_time = end_time - start_time
+            total_inference_time += batch_time
+            total_images += images_aug.size(0)  # batch size
 
             preds = self.colormap[preds.max(dim=1)[1]].cpu().numpy()
-
             images = images.cpu().numpy()
 
             # Saving results
@@ -170,3 +181,52 @@ class SegTrainer(BaseTrainer):
                     image = Image.fromarray(images[i].astype(np.uint8))
                     image = Image.blend(image, pred, config.blend_alpha)
                     image.save(save_blend_path)
+
+        avg_inference_time_per_image = total_inference_time / total_images
+        self.logger.info(f"\nAverage inference time per image: {avg_inference_time_per_image:.6f} seconds")
+        return {
+            "avg_inference_time_sec": avg_inference_time_per_image
+        }
+
+
+
+    # def predict(self, config):
+    #     if config.DDP:
+    #         raise ValueError('Predict mode currently does not support DDP.')
+
+    #     self.logger.info('\nStart predicting...\n')
+
+    #     self.model.eval() # Put model in evalation mode
+
+    #     for (images, images_aug, img_names) in tqdm(self.test_loader):
+    #         images_aug = images_aug.to(self.device, dtype=torch.float32)
+
+    #         preds = self.model(images_aug)
+
+    #         preds = self.colormap[preds.max(dim=1)[1]].cpu().numpy()
+
+    #         images = images.cpu().numpy()
+
+    #         # Saving results
+    #         for i in range(preds.shape[0]):
+
+    #             save_path = os.path.join(config.save_dir, img_names[i])
+    #             save_suffix = img_names[i].split('.')[-1]
+
+    #             pred = Image.fromarray(preds[i].astype(np.uint8))
+
+    #             if config.save_mask:
+    #                 pred.save(save_path)
+
+    #             if config.blend_prediction:
+    #                 save_blend_path = save_path.replace(f'.{save_suffix}', f'_blend.{save_suffix}')
+
+    #                 image = Image.fromarray(images[i].astype(np.uint8))
+    #                 image = Image.blend(image, pred, config.blend_alpha)
+    #                 image.save(save_blend_path)
+
+            
+
+    #         # print out inference rime 
+
+

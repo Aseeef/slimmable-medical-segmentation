@@ -4,6 +4,7 @@ from torch.cuda import amp
 from copy import deepcopy
 from .loss import get_loss_fn
 from models import get_model
+from models import list_available_models
 from datasets import get_loader, get_test_loader
 from utils import (get_optimizer, get_scheduler, parallel_model, de_parallel, 
                     get_ema_model, set_seed, set_device, get_writer, get_logger, 
@@ -38,8 +39,11 @@ class BaseTrainer:
 
         # Define model and put it to the selected device
         self.model = get_model(config).to(self.device)
+        model_list = list_available_models()
+        print(f'model list is: {model_list}')
 
         if config.is_testing:
+            print('configuration is set to testing')
             assert config.load_ckpt, 'Need to load a pretrained checkpoint in `test` mode.'
             self.test_loader = get_test_loader(config)
         else:
@@ -74,6 +78,7 @@ class BaseTrainer:
         # Use exponential moving average of checkpoint update if needed
         if not config.is_testing:
             self.ema_model = get_ema_model(config, self.model, self.device)
+        print('finished initializing base_trainer class')
 
     def run(self, config):
         # Parallel the model using DP or DDP
@@ -142,9 +147,32 @@ class BaseTrainer:
         raise NotImplementedError()
 
     def load_ckpt(self, config):
+
         if config.load_ckpt and os.path.isfile(config.load_ckpt_path):
+            print('loading checkpoint')
             checkpoint = torch.load(config.load_ckpt_path, map_location=torch.device(self.device))
+
+            # print("Checkpoint's state_dict keys:")
+            # for key in checkpoint['state_dict'].keys():
+            #     print(key)
+
+
+            # print('loading model details')
+            # for key in self.model.state_dict().keys():
+            #     print(key)
+
+            print("Checkpoint's state_dict keys and shapes:")
+            for key, value in checkpoint['state_dict'].items():
+                print(f"{key} : {value.shape}")
+
+            print("Model's state_dict keys and shapes:")
+            for key, value in self.model.state_dict().items():
+                print(f"{key} : {value.shape}")
+    
+            # print('loading whole model print')
+            # print(self.model)
             self.model.load_state_dict(checkpoint['state_dict'])
+
             if self.main_rank:
                 self.logger.info(f"Load model state dict from {config.load_ckpt_path}")
 

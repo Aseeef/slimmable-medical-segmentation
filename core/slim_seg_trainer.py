@@ -143,3 +143,16 @@ class SlimmableSegTrainer(SegTrainer):
             self.logger.info(log_print)
 
         return width_scores[max_width][0].mean()
+    
+
+    def set_width(self, width):
+        """
+        Sets the width multiplier on all submodules of the model that have a 'width_mult' attribute.
+        """
+        def set_attr_fn(m):
+            if hasattr(m, 'width_mult'):
+                m.width_mult = width
+        self.model.apply(set_attr_fn)
+        print('setting width in setwith')
+
+    
