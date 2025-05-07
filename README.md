@@ -41,11 +41,11 @@ We adapted this PyTorch implementation to:
 - [x] Set up PyTorch environment on SCC and initialized GitHub repo
 - [x] Replicated DuckNet performance on Kvasir-SEG
 - [x] Integrated slimmable components into DuckNet
-- [ ] Adapted training pipeline to support multi-width slimmable training
+- [x] Adapted training pipeline to support multi-width slimmable training
 
 ### Phase 2: Clinical Adaptation to FEES
 - [x] Collected and labeled custom endoscopic larynx dataset
-- [ ] Applied transfer learning using base (non-slimmable) DuckNet to FEES data
+- [x] Applied transfer learning using base (non-slimmable) DuckNet to FEES data
 - [ ] Retrained Slimmable DuckNet on FEES after verifying transfer learning performance
 
 
@@ -77,7 +77,7 @@ We adapted this PyTorch implementation to:
 
 ## 📊 Datasets
 
-- **Public Datasets:**
+- **Supported Public Datasets:**
    - ETIS_LaribPolypDB
    - CVC_ColonDB
    - CVC_ClinicDB
@@ -107,13 +107,13 @@ We adapted this PyTorch implementation to:
 
 ```bash
 module load miniconda
-git clone https://github.com/<your-username>/Slimmable-DuckNet.git
+git clone https://github.com/Aseeef/slimmable-medical-segmentation.git
 cd Slimmable-DuckNet
 conda env create -f environment.yml
 conda activate dl_prj_env
 ```
 
-To train (example):
+To train (example; other configs available too):
 ```bash
 python main.py --config slimducknetconfig
 ```
@@ -130,5 +130,6 @@ qsub train_script.sh
 
 - 🦆 DUCK-Net (TensorFlow): https://github.com/RazvanDu/DUCK-Net  
 - 🧠 Base PyTorch fork: https://github.com/zh320/medical-segmentation-pytorch  
-- 🧩 Slimmable Neural Networks (Paper): https://arxiv.org/abs/1812.08928  
+- 🧩 Slimmable Neural Networks (Paper): https://arxiv.org/abs/1812.08928
+- 🧩 Universally Slimmable Neural Networks (Paper): https://arxiv.org/abs/1903.05134
 - 🔧 Slimmable Networks GitHub: https://github.com/JiahuiYu/slimmable_networks  
