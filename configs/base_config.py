@@ -42,7 +42,7 @@ class BaseConfig:
 
         # Testing
         self.is_testing = False
-        self.test_bs = 16
+        self.test_bs = 1
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None

@@ -1,9 +1,3 @@
-"""
-Paper:      Using DUCK-Net for Polyp Image Segmentation
-Url:        https://arxiv.org/abs/2311.02239
-Create by:  zh320
-Date:       2024/11/08
-"""
 from typing import List
 
 import torch.nn as nn

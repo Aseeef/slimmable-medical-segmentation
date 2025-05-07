@@ -42,6 +42,7 @@ class BaseTrainer:
         if config.is_testing:
             assert config.load_ckpt, 'Need to load a pretrained checkpoint in `test` mode.'
             self.test_loader = get_test_loader(config)
+            self.train_loader = get_loader(config, self.local_rank, 'train')  # needed to compute bn stats for us nets
         else:
             # Tensorboard monitor
             self.writer = get_writer(config, self.main_rank)

@@ -1,12 +1,14 @@
 import sys, time, torch
 from os import path
+
+from configs import USSlimDuckNetConfig
+
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
-from configs import MyConfig, load_parser
 from models import get_model
 
 
-def test_model_speed(config, ratio=0.5, imgw=2048, imgh=1024, iterations=None):
+def test_model_speed(config, ratio=0.5, imgw=1920, imgh=1080, iterations=None, model_width_mult=None):
     # Codes are based on 
     # https://github.com/ydhongHIT/DDRNet/blob/main/segmentation/DDRNet_23_slim_eval_speed.py
 
@@ -20,6 +22,8 @@ def test_model_speed(config, ratio=0.5, imgw=2048, imgh=1024, iterations=None):
     # torch.backends.cudnn.benchmark = True
 
     model = get_model(config)
+    if model_width_mult is not None:
+        model.apply(lambda m: setattr(m, 'width_mult', model_width_mult))
     model.eval()
     model.to(device)
     print('\n=========Speed Testing=========')
@@ -62,10 +66,10 @@ def test_model_speed(config, ratio=0.5, imgw=2048, imgh=1024, iterations=None):
 
 
 if __name__ == '__main__':
-    config = MyConfig()
+    config = USSlimDuckNetConfig()
     config.init_dependent_config()
-    config = load_parser(config)
 
     config.use_aux = False
 
-    test_model_speed(config)
+    for w in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+        test_model_speed(config, model_width_mult=w)

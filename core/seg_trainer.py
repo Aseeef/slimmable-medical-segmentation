@@ -1,7 +1,7 @@
-import os
+import statistics
+import time
+
 import torch
-import numpy as np
-from PIL import Image
 from tqdm import tqdm
 from torch.cuda import amp
 import torch.nn.functional as F
@@ -145,10 +145,15 @@ class SegTrainer(BaseTrainer):
 
         self.model.eval() # Put model in evalation mode
 
+        pred_times = []
+
         for (images, images_aug, img_names) in tqdm(self.test_loader):
             images_aug = images_aug.to(self.device, dtype=torch.float32)
 
+            start = time.time()
             preds = self.model(images_aug)
+            end = time.time()
+            pred_times.append(end - start)
 
             preds = self.colormap[preds.max(dim=1)[1]].cpu().numpy()
 
@@ -170,3 +175,4 @@ class SegTrainer(BaseTrainer):
                     image = Image.fromarray(images[i].astype(np.uint8))
                     image = Image.blend(image, pred, config.blend_alpha)
                     image.save(save_blend_path)
+            print(statistics.mean(pred_times))

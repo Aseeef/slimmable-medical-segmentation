@@ -19,6 +19,9 @@ from .LSEDucknet import LSEDuckNet
 from .LSEDucknet_UF1 import LSEDuckNet_UF1
 from .LSEDucknet_UF1_2 import LSEDuckNet_UF1_2
 
+from .slimmable.slim_lse_ducknet_uf1_2 import SlimLSEDuckNet_UF1_2
+from .slimmable.us_lse_ducknet_uf1_2 import USLSEDuckNet_UF1_2
+
 
 def get_model(config):
     if config.model == 'smp':   # Use segmentation models pytorch

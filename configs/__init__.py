@@ -7,6 +7,7 @@ from .slim_ducknet_config import SlimDuckNetConfig
 from .kd_slim_ducknet_config import KDSlimDuckNetConfig
 from .kd_hot_slim_ducknet_config import KDHotSlimDuckNetConfig
 from .us_ducknet_config import USSlimDuckNetConfig
+from .us_ducknet_finetune_config import USSlimDuckNetFinetuneConfig
 from .optimized_slim_ducknet_config import OptimizedSlimDuckNetConfig
 from .optimized_slim_ducknet_config_2 import OptimizedSlimDuckNetConfig2
 from .optuna_config import OptunaConfig
@@ -27,6 +28,9 @@ from .LSEDuckNet_predict_config import LSEDuckNet_predict_config
 from .LSEDuckNet_uf1_predict_config import LSEDuckNet_uf1_predict_config
 from .LSEDuckNet_uf1_2_config import LSEDuckNet_uf1_2_config 
 from .LSEDuckNet_uf1_2_predict_config import LSEDuckNet_uf1_2_predict_config
+from .lse_from_scratch import LSEDuckNet34Config
+from .slim_lse_from_scratch import LSESlimDuckNetConfigScratch
+from .SlimLSEDuckNet_uf1_2_config import SlimLSEDuckNet_uf1_2_config
 
 
 def get_config(name):

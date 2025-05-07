@@ -228,6 +228,7 @@ class SlimmableSegTrainer(SegTrainer):
                         i += 1
                         if i >= config.bn_calibration_batch_size:
                             break
+                print(f"Calibration finished using {i} samples!")
             self.model.eval()
             self.is_calibrated = True
 
@@ -240,6 +241,7 @@ class SlimmableSegTrainer(SegTrainer):
             raise ValueError(f"Invalid running_width: {running_width}. Must be one of {config.slim_width_mult_list}.")
         if len(self.train_loader) < config.bn_calibration_batch_size:
             self.logger.warning(f"Running width {running_width} is being used for prediction,"
-                                f" but the training loader only has {len(self.test_loader)} batches. ")
+                                f" but the training loader only has {len(self.train_loader)} batches. ")
         self.model.apply(lambda m: setattr(m, 'width_mult', running_width))
+        # run the actual prediction
         super().predict(config)

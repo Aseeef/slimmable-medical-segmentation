@@ -15,23 +15,28 @@ class TestDataset(Dataset):
             raise RuntimeError(f'Test image directory: {data_folder} does not exist.')
 
         self.transform = AT.Compose([
-            transforms.Scale(scale=config.scale, is_testing=True),
+            AT.Resize(960, 960),  # Match self.crop_size
             AT.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            ToTensorV2(),
+            # Match training config if norm_mean/std were None
+            AT.ToTensorV2(),
         ])
 
         self.images = []
         self.img_names = []
-
         for file_name in os.listdir(data_folder):
-            self.images.append(os.path.join(data_folder, file_name))
-            self.img_names.append(file_name)
+            full_path = os.path.join(data_folder, file_name)
+            if os.path.isfile(full_path) and file_name.lower().endswith(('.jpg', '.jpeg', '.png')):
+                self.images.append(full_path)
+                self.img_names.append(file_name)
+
+        print("Loaded {} images from {}".format(len(self.images), data_folder))
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, index):
         image = np.asarray(Image.open(self.images[index]).convert('RGB'))
+        #print('getitem image: ', image.min().item(), image.max().item())
         img_name = self.img_names[index]
 
         # Perform augmentation and normalization
