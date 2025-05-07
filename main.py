@@ -26,7 +26,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Fetch the selected configuration
-    selected_config = args.config
+    selected_config = args.config.lower()
     config = configs.get_config(selected_config)()
     config.init_dependent_config()
 

@@ -47,7 +47,10 @@ def get_loader(config, rank, mode, pin_memory=True, drop_last=True):
 
 def get_test_loader(config): 
     from .test_dataset import TestDataset
-    dataset = TestDataset(config)
+    if config.test_dataset == 'test_dataset' or config.test_dataset == 'lse_test_dataset':
+        dataset = TestDataset(config)
+    else:
+        raise ValueError('Unsupported test dataset!')
 
     config.test_num = len(dataset)
 

@@ -32,7 +32,7 @@ class ArytenoidsDuckNet34_uf1_fchead_Config(BaseConfig):
         self.loss_type = 'ce_dice'
         self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-5
-        self.class_weights = (0.2, 1.8, 0)
+        self.class_weights = (1, 1, 1)
         # Validating
         self.metrics = ['dice', 'iou']
         self.val_bs = 1

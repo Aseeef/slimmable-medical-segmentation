@@ -40,8 +40,7 @@ class SwitchableBatchNorm2d(nn.Module):
         Returns:
             Tensor: Batch-normalized output.
         """
-        #idx = self.width_mult_list.index(self.width_mult)
-        idx = min(range(len(self.width_mult_list)), key=lambda i: abs(self.width_mult_list[i] - self.width_mult))
+        idx = self.width_mult_list.index(self.width_mult)
         return self.bn[idx](input)
 
 
@@ -250,7 +249,7 @@ class USConv2d(nn.Conv2d):
                  kernel_size, stride: int | tuple[int, int] = 1, padding: int | tuple[int, int] = 0,
                  dilation: int | tuple[int, int] = 1, groups: int = 1,
                  depthwise: bool = False, bias: bool = True,
-                 us: tuple[bool, bool] = [True, True], ratio: tuple[int, int] = [1, 1], conv_averaged: bool = False):
+                 us: tuple[bool, bool] = (True, True), ratio: tuple[int, int] = (1, 1), conv_averaged: bool = False):
         super(USConv2d, self).__init__(
             in_channels, out_channels,
             kernel_size, stride=stride, padding=padding, dilation=dilation,
@@ -271,20 +270,20 @@ class USConv2d(nn.Conv2d):
         * in_channels    whatever #channels the tensor actually carries (x.size(1))
         """
 
-        # decide the output slice 
+        # decide the output slice
         if self.us[1]:
             wanted = make_divisible(self.out_channels_max *
                                     self.width_mult / self.ratio[1]) * self.ratio[1]
             self.out_channels = min(wanted, self.out_channels_max)
 
-        # take the actual input‑channel count 
+        # take the actual input‑channel count
         real_in = x.size(1)
         self.in_channels = real_in
 
         # set groups
         self.groups = real_in if self.depthwise else self.groups
 
-        # slice weights, bias and conv 
+        # slice weights, bias and conv
         weight = self.weight[: self.out_channels, : real_in, :, :]
         bias   = None if self.bias is None else self.bias[: self.out_channels]
 
@@ -300,7 +299,7 @@ class USConvTranspose2d(nn.ConvTranspose2d):
                  output_padding: int | tuple[int, ...] = 0,
                  dilation: int | tuple[int, int] = 1, groups: int = 1,
                  depthwise: bool = False, bias: bool = True,
-                 us: tuple[bool, bool] = [True, True], ratio: tuple[int, int] = [1, 1], conv_averaged: bool = False):
+                 us: tuple[bool, bool] = (True, True), ratio: tuple[int, int] = (1, 1), conv_averaged: bool = False):
         super(USConv2d, self).__init__(
             in_channels, out_channels,
             kernel_size, stride=stride, padding=padding, output_padding=output_padding, dilation=dilation,
@@ -346,10 +345,10 @@ class USLinear(nn.Linear):
         in_features (int): Maximum number of input features.
         out_features (int): Maximum number of output features.
         bias (bool): If True, adds a learnable bias to the output. Default is True.
-        us (None | tuple[bool, bool]): Whether to apply slimmability to input and/or output features. Default is [True, True].
+        us (None | tuple[bool, bool]): Whether to apply slimmability to input and/or output features. Default is (True, True).
     """
 
-    def __init__(self, in_features: int, out_features: int, bias: bool = True, us: tuple[bool, bool] = [True, True]):
+    def __init__(self, in_features: int, out_features: int, bias: bool = True, us: tuple[bool, bool] = (True, True)):
         super(USLinear, self).__init__(
             in_features, out_features, bias=bias)
         self.in_features_max = in_features
@@ -421,7 +420,7 @@ class USBatchNorm2d(nn.BatchNorm2d):
             bn = self._pick_bn(c)         # guaranteed len >= c
             running_mean = bn.running_mean[:c]
             running_var  = bn.running_var [:c]
-        else:                             # single universal BN 
+        else:                             # single universal BN
             running_mean = self.running_mean[:c]
             running_var  = self.running_var [:c]
 
@@ -433,7 +432,7 @@ class USBatchNorm2d(nn.BatchNorm2d):
         for bn in self.bn:                # the bn list is sorted from small to large
             if bn.running_mean.numel() >= need_c:
                 return bn
-        return self.bn[-1] 
+        return self.bn[-1]
 
 
 def pop_channels(autoslim_channels: List[List[int]]):

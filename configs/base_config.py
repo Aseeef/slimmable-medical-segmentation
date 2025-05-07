@@ -42,13 +42,14 @@ class BaseConfig:
 
         # Testing
         self.is_testing = False
-        self.test_bs = 16
+        self.test_bs = 1
         self.test_data_folder = None
         self.colormap = 'random'
         self.colormap_path = None
         self.save_mask = True
         self.blend_prediction = True
         self.blend_alpha = 0.3
+        self.test_dataset = 'test_dataset'
 
         # Loss
         self.loss_type = 'ce'
@@ -73,7 +74,7 @@ class BaseConfig:
         self.logger_name = None
 
         # Training setting
-        self.amp_training = True  # increases training speed by 7% with no noticeable performance hit
+        self.amp_training = False  # increases training speed by 7% with no noticeable performance hit
         self.resume_training = True
         self.load_ckpt = True
         self.load_ckpt_path = None

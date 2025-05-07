@@ -42,6 +42,7 @@ class BaseTrainer:
         if config.is_testing:
             assert config.load_ckpt, 'Need to load a pretrained checkpoint in `test` mode.'
             self.test_loader = get_test_loader(config)
+            self.train_loader = get_loader(config, self.local_rank, 'train')  # needed to compute bn stats for us nets
         else:
             # Tensorboard monitor
             self.writer = get_writer(config, self.main_rank)
@@ -98,7 +99,7 @@ class BaseTrainer:
                     # Save best model
                     self.best_score = val_score
                     if config.save_ckpt:
-                        self.save_ckpt(config, save_best=True) 
+                        self.save_ckpt(config, save_best=True)
 
             if self.main_rank and config.save_ckpt:
                 # Save last model    
@@ -144,7 +145,7 @@ class BaseTrainer:
     def load_ckpt(self, config):
         if config.load_ckpt and os.path.isfile(config.load_ckpt_path):
             checkpoint = torch.load(config.load_ckpt_path, map_location=torch.device(self.device))
-            self.model.load_state_dict(checkpoint['state_dict'])
+            self.model.load_state_dict(checkpoint['state_dict'], strict=False) #Add to account for transfer learning
             if self.main_rank:
                 self.logger.info(f"Load model state dict from {config.load_ckpt_path}")
 
@@ -152,7 +153,12 @@ class BaseTrainer:
                 self.cur_epoch = checkpoint['cur_epoch'] + 1
                 self.best_score = checkpoint['best_score']
                 self.optimizer.load_state_dict(checkpoint['optimizer'])
-                self.scheduler.load_state_dict(checkpoint['scheduler'])
+                # only load scheduler if NOT switching schedulers
+                # we assume cos_anneal is only used if you are fine-tuning a pretrained model
+                if config.lr_policy == 'cos_anneal':
+                    self.scheduler = get_scheduler(config, self.optimizer, trained_epochs=self.cur_epoch)
+                else:
+                    self.scheduler.load_state_dict(checkpoint['scheduler'])
                 self.train_itrs = self.cur_epoch * config.iters_per_epoch
                 if self.main_rank:
                     self.logger.info(f"Resume training from {config.load_ckpt_path}")

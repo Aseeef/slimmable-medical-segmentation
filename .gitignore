@@ -1,3 +1,4 @@
 train.logs
 save
 *.pyc
+*/__pycache__

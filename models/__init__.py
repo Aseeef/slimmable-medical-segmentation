@@ -14,6 +14,15 @@ from .BRACSDuckNet_UF1_FCHead import BRACSDuckNet_UF1_FCHead
 #3-class segmentation: left and right arytenoids.
 from .ArytenoidsDuckNet_UF1_FCHead import ArytenoidsDuckNet_UF1_FCHead
 
+#Binary: original DuckNet. Classification on just the LSE, binary.
+from .LSEDucknet import LSEDuckNet
+from .LSEDucknet_UF1 import LSEDuckNet_UF1
+from .LSEDucknet_UF1_2 import LSEDuckNet_UF1_2
+
+from .slimmable.slim_lse_ducknet_uf1_2 import SlimLSEDuckNet_UF1_2
+from .slimmable.us_lse_ducknet_uf1_2 import USLSEDuckNet_UF1_2
+
+
 def get_model(config):
     if config.model == 'smp':   # Use segmentation models pytorch
         from .smp_wrapper import get_smp_model

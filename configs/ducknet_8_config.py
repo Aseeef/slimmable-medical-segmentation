@@ -1,16 +1,16 @@
 import os.path
 
-from .base_config import BaseConfig, SlimmableTrainingType
+from .base_config import BaseConfig
 from .config_registry import register_config
 
 
 @register_config
-class USSlimDuckNetConfig(BaseConfig):
+class DuckNet8Config(BaseConfig):
 
     def __init__(self,):
         super().__init__()
-        # Config name; used for save path
-        self.save_dir = 'save/us_ducknet_34_x2_cpy'
+        # Change Save Dir for different configs!
+        self.save_dir = 'save/ducknet_8'
 
         # Dataset
         self.dataset = 'polyp'
@@ -19,15 +19,14 @@ class USSlimDuckNetConfig(BaseConfig):
         self.use_test_set = True
 
         # Model
-        self.model = 'usducknet'
-        self.base_channel = 34
+        self.model = 'ducknet'
+        self.base_channel = 8
 
         # Training
-        self.amp_training = False  # increases training speed by 7% in my tests
         self.total_epoch = 600
         self.train_bs = 16  # this is PER GPU
         self.loss_type = 'dice'
-        self.optimizer_type = 'adam'
+        self.optimizer_type = 'rmsprop'
         self.base_lr = 1e-4
 
         # Validating
@@ -52,17 +51,3 @@ class USSlimDuckNetConfig(BaseConfig):
         self.affine_rotate = (-180, 180)
         self.affine_translate = (-0.125, 0.125)
         self.affine_scale = (0.5, 1.5)
-
-        # Slimmable Networks
-        self.slimmable_training_type = SlimmableTrainingType.US_NET.value
-        # note: if width multiplier result in round numbers, the decimal is truncated (so think math.floor)
-        self.slim_width_mult_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-        self.slim_width_range = [0.1, 1]
-        self.inplace_distillation = True
-        self.kd_loss_coefficient = 1.0
-        self.kd_temperature = 4.0
-        # the number of BATCHES to use for calibration (not the total number of training items)
-        self.bn_calibration_batch_size = 3
-        # how many width to sample for training
-        self.us_num_training_samples = 6
-        self.trainer = 'slimmablesegtrainer'

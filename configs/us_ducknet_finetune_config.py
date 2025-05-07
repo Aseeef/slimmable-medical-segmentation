@@ -5,12 +5,12 @@ from .config_registry import register_config
 
 
 @register_config
-class USSlimDuckNetConfig(BaseConfig):
+class USSlimDuckNetFinetuneConfig(BaseConfig):
 
     def __init__(self,):
         super().__init__()
         # Config name; used for save path
-        self.save_dir = 'save/us_ducknet_34_x2_cpy'
+        self.save_dir = 'save/us_ducknet_34_x2'
 
         # Dataset
         self.dataset = 'polyp'
@@ -24,7 +24,8 @@ class USSlimDuckNetConfig(BaseConfig):
 
         # Training
         self.amp_training = False  # increases training speed by 7% in my tests
-        self.total_epoch = 600
+        self.trained_epochs = 600
+        self.total_epoch = 800
         self.train_bs = 16  # this is PER GPU
         self.loss_type = 'dice'
         self.optimizer_type = 'adam'
@@ -37,6 +38,9 @@ class USSlimDuckNetConfig(BaseConfig):
         # Training setting
         self.use_ema = False
         self.logger_name = 'medseg_trainer'
+
+        # Scheduler
+        self.lr_policy = 'cos_anneal'
 
         # Augmentation
         self.crop_size = 320

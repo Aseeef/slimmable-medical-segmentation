@@ -17,9 +17,10 @@ def us_conv3x3(in_channels: int, out_channels: int,
 
 # Regular convolution with kernel size 1x1, a.k.a. point-wise convolution
 def us_conv1x1(in_channels: int, out_channels: int,
-               stride: int | tuple[int, int] = 1, bias=False):
+               stride: int | tuple[int, int] = 1, bias=False,
+               us: tuple[bool, bool] = (True, True)):
     return USConv2d(in_channels, out_channels, kernel_size=1, stride=stride,
-                    padding=0, bias=bias)
+                    padding=0, bias=bias, us=us)
 
 
 # Depth-wise seperable convolution with batchnorm and activation
